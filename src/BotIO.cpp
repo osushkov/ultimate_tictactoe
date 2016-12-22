@@ -1,16 +1,46 @@
 
-#include "Bot.hpp"
+#include "BotIO.hpp"
 
 #include <cstdlib>
 #include <string>
 #include <vector>
+#include <utility>
+#include <iostream>
+#include <algorithm>
+#include <sstream>
+#include <time.h>
+
+using namespace std;
+
+std::vector<std::string> &split(
+        const std::string &s, char delim, std::vector<std::string> &elems) {
+    std::stringstream ss(s);
+    std::string item;
+    elems.clear();
+    while (std::getline(ss, item, delim)) {
+        elems.push_back(item);
+    }
+    return elems;
+}
+
+
+int stringToInt(const std::string &s) {
+    std::istringstream ss(s);
+    int result;
+    ss >> result;
+    return result;
+}
+
+void debug(const std::string &s) {
+  std::cerr << s << std::endl << std::flush;
+}
 
 BotIO::BotIO() {
   _field.resize(81);
   _macroboard.resize(9);
 }
 
-void loop() {
+void BotIO::Loop() {
   std::string line;
   std::vector<std::string> command;
   command.reserve(256);
@@ -20,30 +50,11 @@ void loop() {
   }
 }
 
-private:
-/**
- * Implement this function.
- * type is always "move"
- *
- * return value must be position in x,y presentation
- *      (use std::make_pair(x, y))
- */
-std::pair<int, int> action(const std::string &type, int time) { return getRandomFreeCell(); }
+std::pair<int, int> BotIO::action(const std::string &type, int time) {
+  return getRandomFreeCell();
+}
 
-/**
- * Returns random free cell.
- * It can be used to make your bot more immune to errors
- * Use next pattern in action method:
- *
- *      try{
- *          ... YOUR ALGORITHM ...
- *      }
- *      catch(...) {
- *          return getRandomCell();
- *      }
- *
- */
-std::pair<int, int> getRandomFreeCell() const {
+std::pair<int, int> BotIO::getRandomFreeCell() const {
   debug("Using random algorithm.");
   std::vector<int> freeCells;
   for (int i = 0; i < 81; ++i) {
@@ -56,7 +67,7 @@ std::pair<int, int> getRandomFreeCell() const {
   return std::make_pair(randomCell % 9, randomCell / 9);
 }
 
-void processCommand(const std::vector<std::string> &command) {
+void BotIO::processCommand(const std::vector<std::string> &command) {
   if (command[0] == "action") {
     auto point = action(command[1], stringToInt(command[2]));
     std::cout << "place_move " << point.first << " " << point.second << std::endl << std::flush;
@@ -69,7 +80,7 @@ void processCommand(const std::vector<std::string> &command) {
   }
 }
 
-void update(const std::string &player, const std::string &type, const std::string &value) {
+void BotIO::update(const std::string &player, const std::string &type, const std::string &value) {
   if (player != "game" && player != _myName) {
     // It's not my update!
     return;
@@ -89,7 +100,7 @@ void update(const std::string &player, const std::string &type, const std::strin
   }
 }
 
-void setting(const std::string &type, const std::string &value) {
+void BotIO::setting(const std::string &type, const std::string &value) {
   if (type == "timebank") {
     _timebank = stringToInt(value);
   } else if (type == "time_per_move") {
@@ -104,21 +115,3 @@ void setting(const std::string &type, const std::string &value) {
     debug("Unknown setting <" + type + ">.");
   }
 }
-
-void debug(const std::string &s) const { std::cerr << s << std::endl << std::flush; }
-
-private:
-// static settings
-int _timebank;
-int _timePerMove;
-int _botId;
-std::vector<std::string> _playerNames;
-std::string _myName;
-
-// dynamic settings
-int _round;
-int _move;
-std::vector<int> _macroboard;
-std::vector<int> _field;
-}
-;
