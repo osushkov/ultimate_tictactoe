@@ -8,7 +8,7 @@ namespace naivebot {
 
 class Rules {
 public:
-  Rules();
+  static Rules *Instance(void); // singleton rules.
   ~Rules() = default;
 
   uptr<State> InitialState(void) const;
@@ -21,5 +21,8 @@ public:
 
   // Returns whether the current actor has lost the game.
   bool IsLoss(const State &state) const;
+
+private:
+  Rules();
 };
 }

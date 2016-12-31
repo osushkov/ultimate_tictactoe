@@ -1,5 +1,6 @@
 
 #include "MCTS.hpp"
+#include "../Rules.hpp"
 #include "Node.hpp"
 
 static const double P_RANDOM = 0.2;
@@ -15,8 +16,8 @@ struct MCTS::MCTSImpl {
 
   // TODO: handle the fact that the lifetime of an action returned here has to be less than or
   // equal to the lifetime of the MCTS.
-  vector<ActionUtility> ComputeUtilities(State *startState) {
-    root = make_unique<Node>(startState->Clone(), 0);
+  vector<ActionUtility> ComputeUtilities(const State &startState) {
+    root = make_unique<Node>(startState, 0);
 
     for (unsigned i = 0; i < MC_ITER; i++) {
       mcIteration(root.get());
@@ -55,18 +56,17 @@ struct MCTS::MCTSImpl {
   }
 
   double playout(Node *startNode) {
-    GameRules* rules = GameRules::instance();
+    Rules *rules = Rules::Instance();
 
     unsigned curPlayerIndex = startNode->PlayerIndex();
-    State *curState = startNode->GetState();
+    State curState = startNode->GetState();
 
-    vector<uptr<State>> playedStates;
-    while (!rules->IsTerminalState(*curState)) {
-      uptr<State> nextState = randomSuccessor(curState);
+    vector<State> playedStates;
+    while (!rules->IsTerminalState(curState)) {
+      curState = randomSuccessor(curState);
+      playedStates.push_back(curState);
+
       curPlayerIndex = 1 - curPlayerIndex;
-
-      curState = nextState.get();
-      playedStates.push_back(move(nextState));
     }
 
     // Account for the fact that the winner may not be the player of the original startNode.
@@ -74,25 +74,25 @@ struct MCTS::MCTSImpl {
     // the startNode.
     double utilFlip = startNode->PlayerIndex() == curPlayerIndex ? 1.0 : -1.0;
 
-    if (rules->IsWin(*curState)) {
+    if (rules->IsWin(curState)) {
       return 1.0 * utilFlip;
-    } else if (rules->IsLoss(*curState)) {
+    } else if (rules->IsLoss(curState)) {
       return -1.0 * utilFlip;
     } else {
       return 0.0;
     }
   }
 
-  uptr<State> randomSuccessor(State *state) {
-    vector<uptr<Action>> actions = state->AvailableActions();
+  State randomSuccessor(const State &state) {
+    vector<Action> actions = state.AvailableActions();
     // We shouldnt be getting terminal states in this function.
     assert(!actions.empty());
 
-    uptr<State> result = state->SuccessorState(*actions[rand() % actions.size()]);
+    State result = state.SuccessorState(actions[rand() % actions.size()]);
 
     // TODO: this is a bit hacky, fix this here and other places.
-    static_cast<GameState *>(result.get())->FlipState();
-    return move(result);
+    result.FlipState();
+    return result;
   }
 };
 
@@ -100,6 +100,6 @@ MCTS::MCTS() : impl(new MCTSImpl()) {}
 
 MCTS::~MCTS() = default;
 
-vector<ActionUtility> MCTS::ComputeUtilities(State *curState) {
+vector<ActionUtility> MCTS::ComputeUtilities(const State &curState) {
   return impl->ComputeUtilities(curState);
 }

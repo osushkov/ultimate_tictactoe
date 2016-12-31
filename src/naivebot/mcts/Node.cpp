@@ -1,25 +1,25 @@
 
 #include "Node.hpp"
-#include "../State.hpp"
 #include "../../util/Util.hpp"
+#include "../State.hpp"
 #include <cassert>
 
 using namespace naivebot;
 using namespace naivebot::mcts;
 
-Node::Node(uptr<State> state, unsigned playerIndex)
-    : state(move(state)), playerIndex(playerIndex), isLeaf(true), totalTrials(0), sumUtility(0.0) {}
+Node::Node(const State &state, unsigned playerIndex)
+    : state(state), playerIndex(playerIndex), isLeaf(true), totalTrials(0), sumUtility(0.0) {}
 
 bool Node::IsLeaf(void) const { return isLeaf; }
 
 unsigned Node::PlayerIndex(void) const { return playerIndex; }
 
-State *Node::GetState(void) const { return state.get(); }
+State Node::GetState(void) const { return state; }
 
-vector<pair<Action *, double>> Node::GetActionUtilities(void) const {
-  vector<pair<Action *, double>> result;
+vector<pair<Action, double>> Node::GetActionUtilities(void) const {
+  vector<pair<Action, double>> result;
   for (const auto &edge : children) {
-    result.push_back(make_pair(edge.first.get(), edge.second->ExpectedUtility(playerIndex)));
+    result.push_back(make_pair(edge.first, edge.second->ExpectedUtility(playerIndex)));
   }
   return result;
 }
@@ -27,7 +27,7 @@ vector<pair<Action *, double>> Node::GetActionUtilities(void) const {
 Node *Node::Expand(void) {
   assert(isLeaf);
 
-  vector<uptr<Action>> available = nonExpandedActions();
+  vector<Action> available = nonExpandedActions();
   if (available.empty()) { // This can happen at a terminal game state.
     return nullptr;
   }
@@ -37,12 +37,12 @@ Node *Node::Expand(void) {
   }
 
   auto &chosenAction = available[rand() % available.size()];
-  uptr<State> childState = state->SuccessorState(*chosenAction);
+  State childState = state.SuccessorState(chosenAction);
 
   // TODO: this is a bit hacky. I should maybe move this into State
-  static_cast<GameState *>(childState.get())->FlipState();
+  childState.FlipState();
 
-  children.emplace_back(move(chosenAction), make_unique<Node>(move(childState), 1 - playerIndex));
+  children.emplace_back(chosenAction, make_unique<Node>(childState, 1 - playerIndex));
   return children.back().second.get();
 }
 
@@ -77,20 +77,20 @@ void Node::AddUtility(double utility) {
 
 // This is just a quick and dirty hack, can be more efficient but on small branch factor
 // problems doesnt really make a difference.
-vector<uptr<Action>> Node::nonExpandedActions(void) {
-  vector<uptr<Action>> stateActions = state->AvailableActions();
+vector<Action> Node::nonExpandedActions(void) {
+  vector<Action> stateActions = state.AvailableActions();
 
-  vector<uptr<Action>> result;
+  vector<Action> result;
   for (auto &sa : stateActions) {
     bool shouldAdd = true;
     for (auto &c : children) {
-      if (*sa.get() == *c.first.get()) {
+      if (sa == c.first) {
         shouldAdd = false;
         break;
       }
     }
     if (shouldAdd) {
-      result.push_back(move(sa));
+      result.push_back(sa);
     }
   }
   return result;

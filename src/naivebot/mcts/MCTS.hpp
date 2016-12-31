@@ -3,14 +3,14 @@
 
 #include "../../util/Common.hpp"
 #include "../Action.hpp"
-#include "../State.hpp"
 #include "../Rules.hpp"
-
-// An action and the probability of winning by taking that action.
-using ActionUtility = pair<Action *, double>;
+#include "../State.hpp"
 
 namespace naivebot {
 namespace mcts {
+
+// An action and the probability of winning by taking that action.
+using ActionUtility = pair<Action, double>;
 
 // Monte-Carlo Tree Search.
 class MCTS {
@@ -19,7 +19,7 @@ public:
   virtual ~MCTS();
 
   // Sorted list of action utilities.
-  vector<ActionUtility> ComputeUtilities(State *curState);
+  vector<ActionUtility> ComputeUtilities(const State &curState);
 
 private:
   struct MCTSImpl;

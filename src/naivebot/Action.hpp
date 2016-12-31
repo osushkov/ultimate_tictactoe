@@ -7,13 +7,13 @@
 namespace naivebot {
 
 class Action {
+public:
   unsigned x, y;
 
-public:
   Action(unsigned x, unsigned y);
   ~Action() = default;
 
-  bool operator==(const Action &obj) const;
+  bool operator==(const Action &other) const;
 
   // Returns a hash of this action.
   size_t HashCode(void) const;
@@ -23,7 +23,7 @@ public:
 }
 
 namespace std {
-template <> struct hash<Action *> {
+template <> struct hash<naivebot::Action *> {
   inline size_t operator()(naivebot::Action const *action) const { return action->HashCode(); }
 };
 }
