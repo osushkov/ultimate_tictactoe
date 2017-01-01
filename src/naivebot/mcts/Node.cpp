@@ -39,9 +39,6 @@ Node *Node::Expand(void) {
   auto &chosenAction = available[rand() % available.size()];
   State childState = state.SuccessorState(chosenAction);
 
-  // TODO: this is a bit hacky. I should maybe move this into State
-  childState.FlipState();
-
   children.emplace_back(chosenAction, make_unique<Node>(childState, 1 - playerIndex));
   return children.back().second.get();
 }

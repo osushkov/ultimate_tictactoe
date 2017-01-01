@@ -88,11 +88,7 @@ struct MCTS::MCTSImpl {
     // We shouldnt be getting terminal states in this function.
     assert(!actions.empty());
 
-    State result = state.SuccessorState(actions[rand() % actions.size()]);
-
-    // TODO: this is a bit hacky, fix this here and other places.
-    result.FlipState();
-    return result;
+    return state.SuccessorState(actions[rand() % actions.size()]);
   }
 };
 
