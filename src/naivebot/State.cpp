@@ -39,21 +39,104 @@ std::ostream &operator<<(std::ostream &stream, const TopCellState &tcs) {
   return stream;
 }
 
-static TopCellState calculateGridState(const array<CellState, NUM_CELLS> &grid, unsigned startX,
-                                       unsigned startY) {
+static array<array<int, 3>, 8> runIndices{{array<int, 3>{{0, 1, 2}}, array<int, 3>{{3, 4, 5}},
+                                           array<int, 3>{{6, 7, 8}}, array<int, 3>{{0, 3, 6}},
+                                           array<int, 3>{{1, 4, 7}}, array<int, 3>{{2, 5, 8}},
+                                           array<int, 3>{{0, 4, 8}}, array<int, 3>{{2, 4, 6}}}};
+
+static unsigned findRun(const array<int, NUM_TOP_CELLS> &grid) {
+  for (unsigned i = 0; i < runIndices.size(); i++) {
+    int val = grid[runIndices[i][0]];
+    if (val == 0) {
+      continue;
+    }
+
+    bool allSame = true;
+    for (unsigned j = 1; j < runIndices[i].size(); j++) {
+      if (val != grid[runIndices[i][j]]) {
+        allSame = false;
+        break;
+      }
+    }
+
+    if (allSame) {
+      return val;
+    }
+  }
+
+  return 0;
+}
+
+static TopCellState calculateGridState(const array<CellState, NUM_CELLS> &grid,
+                                       const unsigned startX, const unsigned startY) {
+  array<int, 9> convertedGrid;
+
+  unsigned numUnfilled = 0;
+  unsigned i = 0;
+  for (unsigned y = startY; y < startY + 3; y++) {
+    for (unsigned x = startX; x < startX + 3; x++) {
+      auto gv = grid[x + y * 9];
+
+      if (gv == CellState::EMPTY) {
+        numUnfilled++;
+      }
+
+      switch (gv) {
+      case CellState::EMPTY:
+        convertedGrid[i] = 0;
+        break;
+      case CellState::MY_TOKEN:
+        convertedGrid[i] = 1;
+        break;
+      case CellState::OPPONENT_TOKEN:
+        convertedGrid[i] = 2;
+        break;
+      }
+
+      i++;
+    }
+  }
+
+  if (numUnfilled > 4) {
+    return TopCellState::UNDECIDED;
+  }
+
+  int run = findRun(convertedGrid);
+  if (run == 0) {
+    return numUnfilled == 0 ? TopCellState::DRAW : TopCellState::UNDECIDED;
+  } else {
+    return run == 1 ? TopCellState::MY_TOKEN : TopCellState::OPPONENT_TOKEN;
+  }
 
   return TopCellState::UNDECIDED;
 }
 
 static TopCellState calculateGridState(const array<TopCellState, NUM_TOP_CELLS> &grid) {
+  array<int, 9> convertedGrid;
+
   unsigned numUnfilled = 0;
   unsigned numNeutral = 0;
   for (unsigned i = 0; i < NUM_TOP_CELLS; i++) {
-    if (grid[i] == TopCellState::UNDECIDED) {
+    auto gv = grid[i];
+
+    if (gv == TopCellState::UNDECIDED) {
       numNeutral++;
       numUnfilled++;
-    } else if (grid[i] == TopCellState::DRAW) {
+    } else if (gv == TopCellState::DRAW) {
       numNeutral++;
+    }
+
+    switch (gv) {
+    case TopCellState::UNDECIDED:
+    case TopCellState::DRAW:
+      convertedGrid[i] = 0;
+      break;
+    case TopCellState::MY_TOKEN:
+      convertedGrid[i] = 1;
+      break;
+    case TopCellState::OPPONENT_TOKEN:
+      convertedGrid[i] = 2;
+      break;
     }
   }
 
@@ -61,12 +144,30 @@ static TopCellState calculateGridState(const array<TopCellState, NUM_TOP_CELLS> 
     return numUnfilled == 0 ? TopCellState::DRAW : TopCellState::UNDECIDED;
   }
 
-  return TopCellState::UNDECIDED;
+  int run = findRun(convertedGrid);
+  if (run == 0) {
+    return numUnfilled == 0 ? TopCellState::DRAW : TopCellState::UNDECIDED;
+  } else {
+    return run == 1 ? TopCellState::MY_TOKEN : TopCellState::OPPONENT_TOKEN;
+  }
 }
 
 State::State() : isTerminal(false), isWin(false), isLoss(false) {
   cells.fill(CellState::EMPTY);
   topCells.fill(TopCellState::UNDECIDED);
+}
+
+State::State(const array<CellState, NUM_CELLS> &fieldCells)
+    : cells(fieldCells), isTerminal(false), isWin(false), isLoss(false) {
+
+  unsigned i = 0;
+  for (unsigned ty = 0; ty < 3; ty++) {
+    for (unsigned tx = 0; tx < 3; tx++) {
+      topCells[i++] = calculateGridState(cells, tx * 3, ty * 3);
+    }
+  }
+
+  assert(calculateGridState(topCells) == TopCellState::UNDECIDED);
 }
 
 State::State(const State &other)

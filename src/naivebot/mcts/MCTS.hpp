@@ -3,7 +3,6 @@
 
 #include "../../util/Common.hpp"
 #include "../Action.hpp"
-#include "../Rules.hpp"
 #include "../State.hpp"
 
 namespace naivebot {

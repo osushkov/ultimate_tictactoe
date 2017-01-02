@@ -1,6 +1,5 @@
 
 #include "MCTS.hpp"
-#include "../Rules.hpp"
 #include "Node.hpp"
 
 static const double P_RANDOM = 0.2;
@@ -56,13 +55,11 @@ struct MCTS::MCTSImpl {
   }
 
   double playout(Node *startNode) {
-    Rules *rules = Rules::Instance();
-
     unsigned curPlayerIndex = startNode->PlayerIndex();
     State curState = startNode->GetState();
 
     vector<State> playedStates;
-    while (!rules->IsTerminalState(curState)) {
+    while (!curState.IsTerminal()) {
       curState = randomSuccessor(curState);
       playedStates.push_back(curState);
 
@@ -74,9 +71,9 @@ struct MCTS::MCTSImpl {
     // the startNode.
     double utilFlip = startNode->PlayerIndex() == curPlayerIndex ? 1.0 : -1.0;
 
-    if (rules->IsWin(curState)) {
+    if (curState.IsWin()) {
       return 1.0 * utilFlip;
-    } else if (rules->IsLoss(curState)) {
+    } else if (curState.IsLoss()) {
       return -1.0 * utilFlip;
     } else {
       return 0.0;

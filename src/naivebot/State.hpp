@@ -34,6 +34,7 @@ class State {
 
 public:
   State();
+  State(const array<CellState, NUM_CELLS> &fieldCells);
   State(const State &other);
 
   ~State() = default;
