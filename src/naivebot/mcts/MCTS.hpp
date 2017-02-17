@@ -14,7 +14,7 @@ using ActionUtility = pair<Action, double>;
 // Monte-Carlo Tree Search.
 class MCTS {
 public:
-  MCTS();
+  MCTS(unsigned iters);
   virtual ~MCTS();
 
   // Sorted list of action utilities.

@@ -269,6 +269,7 @@ State State::SuccessorState(const Action &action) const {
     }
   }
 
+  result.flipState();
   return result;
 }
 

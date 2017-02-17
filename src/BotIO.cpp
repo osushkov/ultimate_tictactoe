@@ -23,7 +23,6 @@ std::vector<std::string> &split(
     return elems;
 }
 
-
 int stringToInt(const std::string &s) {
     std::istringstream ss(s);
     int result;

@@ -3,22 +3,23 @@
 #include "Node.hpp"
 
 static const double P_RANDOM = 0.2;
-static const unsigned MC_ITER = 100000;
 
 using namespace naivebot;
 using namespace naivebot::mcts;
 
 struct MCTS::MCTSImpl {
+  unsigned mctsIters;
+
   uptr<Node> root;
 
-  MCTSImpl() = default;
+  MCTSImpl(unsigned iters) : mctsIters(iters) {};
 
   // TODO: handle the fact that the lifetime of an action returned here has to be less than or
   // equal to the lifetime of the MCTS.
   vector<ActionUtility> ComputeUtilities(const State &startState) {
     root = make_unique<Node>(startState, 0);
 
-    for (unsigned i = 0; i < MC_ITER; i++) {
+    for (unsigned i = 0; i < mctsIters; i++) {
       mcIteration(root.get());
     }
 
@@ -89,7 +90,7 @@ struct MCTS::MCTSImpl {
   }
 };
 
-MCTS::MCTS() : impl(new MCTSImpl()) {}
+MCTS::MCTS(unsigned iters) : impl(new MCTSImpl(iters)) {}
 
 MCTS::~MCTS() = default;
 
