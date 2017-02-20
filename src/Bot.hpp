@@ -7,6 +7,7 @@
 class Bot {
 public:
 
+  // botId must be either 1 or 2.
   virtual void SetBotId(int botId) = 0;
   // virtual void SetTimeRemaining(unsigned milliseconds);
 

@@ -6,6 +6,8 @@
 #include <memory>
 #include <type_traits>
 #include <utility>
+#include <functional>
+#include <cassert>
 
 #include "Maybe.hpp"
 
@@ -60,4 +62,24 @@ template <class T> typename _Unique_if<T>::_Unknown_bound make_unique(size_t n) 
 
 template <class T, class... Args>
 typename _Unique_if<T>::_Known_bound make_unique(Args &&...) = delete;
+}
+
+template <typename T1, typename T2>
+vector<T2> vmap(const vector<T1> &src, const std::function<T2(T1, unsigned)> &mapper) {
+  vector<T2> result(src.size());
+  for (unsigned i = 0; i < src.size(); i++) {
+      result[i] = mapper(src[i], i);
+  }
+  return result;
+}
+
+template <typename T>
+vector<T> vgen(unsigned num, const std::function<T(unsigned)> &generator) {
+  assert(num > 0);
+
+  vector<T> result(num);
+  for (unsigned i = 0; i < num; i++) {
+    result[i] = generator(i);
+  }
+  return result;
 }

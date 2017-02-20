@@ -12,58 +12,40 @@
 
 using namespace std;
 
-std::vector<std::string> &split(
-        const std::string &s, char delim, std::vector<std::string> &elems) {
-    std::stringstream ss(s);
-    std::string item;
-    elems.clear();
-    while (std::getline(ss, item, delim)) {
-        elems.push_back(item);
-    }
-    return elems;
+static std::vector<std::string> &split(
+    const std::string &s, char delim, std::vector<std::string> &elems) {
+  std::stringstream ss(s);
+  std::string item;
+  elems.clear();
+  while (std::getline(ss, item, delim)) {
+    elems.push_back(item);
+  }
+  return elems;
 }
 
-int stringToInt(const std::string &s) {
-    std::istringstream ss(s);
-    int result;
-    ss >> result;
-    return result;
+static int stringToInt(const std::string &s) {
+  std::istringstream ss(s);
+  int result;
+  ss >> result;
+  return result;
 }
 
-void debug(const std::string &s) {
+static void debug(const std::string &s) {
   std::cerr << s << std::endl << std::flush;
 }
 
-BotIO::BotIO() {
-  _field.resize(81);
-  _macroboard.resize(9);
+BotIO::BotIO(uptr<Bot> bot) : bot(std::move(bot)) {
+  command.reserve(256);
 }
 
 void BotIO::Loop() {
-  std::string line;
-  std::vector<std::string> command;
-  command.reserve(256);
-
   while (std::getline(std::cin, line)) {
     processCommand(split(line, ' ', command));
   }
 }
 
 std::pair<int, int> BotIO::action(const std::string &type, int time) {
-  return getRandomFreeCell();
-}
-
-std::pair<int, int> BotIO::getRandomFreeCell() const {
-  debug("Using random algorithm.");
-  std::vector<int> freeCells;
-  for (int i = 0; i < 81; ++i) {
-    int blockId = ((i / 27) * 3) + (i % 9) / 3;
-    if (_macroboard[blockId] == -1 && _field[i] == 0) {
-      freeCells.push_back(i);
-    }
-  }
-  int randomCell = freeCells[rand() % freeCells.size()];
-  return std::make_pair(randomCell % 9, randomCell / 9);
+  return bot->ChooseAction(field);
 }
 
 void BotIO::processCommand(const std::vector<std::string> &command) {
@@ -89,11 +71,8 @@ void BotIO::update(const std::string &player, const std::string &type, const std
     _round = stringToInt(value);
   } else if (type == "move") {
     _move = stringToInt(value);
-  } else if (type == "macroboard" || type == "field") {
-    std::vector<std::string> rawValues;
-    split(value, ',', rawValues);
-    std::vector<int>::iterator choice = (type == "field" ? _field.begin() : _macroboard.begin());
-    std::transform(rawValues.begin(), rawValues.end(), choice, stringToInt);
+  } else if (type == "field") {
+    field = value;
   } else {
     debug("Unknown update <" + type + ">.");
   }
@@ -109,7 +88,7 @@ void BotIO::setting(const std::string &type, const std::string &value) {
   } else if (type == "your_bot") {
     _myName = value;
   } else if (type == "your_botid") {
-    _botId = stringToInt(value);
+    bot->SetBotId(stringToInt(value));
   } else {
     debug("Unknown setting <" + type + ">.");
   }

@@ -22,7 +22,7 @@ enum class TopCellState {
   MY_TOKEN = 2,
   OPPONENT_TOKEN = 3,
 };
-std::ostream &operator<<(std::ostream &stream, const TopCellState &cs);
+std::ostream &operator<<(std::ostream &stream, const TopCellState &tcs);
 
 class State {
   array<CellState, NUM_CELLS> cells;

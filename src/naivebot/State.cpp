@@ -6,7 +6,7 @@
 
 using namespace naivebot;
 
-std::ostream &operator<<(std::ostream &stream, const CellState &cs) {
+std::ostream &naivebot::operator<<(std::ostream &stream, const CellState &cs) {
   switch (cs) {
   case CellState::MY_TOKEN:
     stream << "X";
@@ -21,7 +21,7 @@ std::ostream &operator<<(std::ostream &stream, const CellState &cs) {
   return stream;
 }
 
-std::ostream &operator<<(std::ostream &stream, const TopCellState &tcs) {
+std::ostream &naivebot::operator<<(std::ostream &stream, const TopCellState &tcs) {
   switch (tcs) {
   case TopCellState::UNDECIDED:
     stream << ".";
