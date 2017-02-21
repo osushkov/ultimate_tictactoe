@@ -17,9 +17,14 @@ struct NaiveBot::NaiveBotImpl {
   };
 
   pair<int, int> ChooseAction(const string &field) {
+    auto action = ChooseAction(parseState(field));
+    return make_pair(action.x, action.y);
+  }
+
+  Action ChooseAction(const State &state) {
     mcts::MCTS mcts(10000);
-    vector<mcts::ActionUtility> actions = mcts.ComputeUtilities(parseState(field));
-    return make_pair(actions.front().first.x, actions.front().first.y);
+    vector<mcts::ActionUtility> actions = mcts.ComputeUtilities(state);
+    return actions.front().first;
   }
 
   State parseState(const string &field) {
@@ -64,3 +69,7 @@ NaiveBot::~NaiveBot() = default;
 void NaiveBot::SetBotId(int botId) { impl->SetBotId(botId); }
 
 pair<int, int> NaiveBot::ChooseAction(const string &field) { return impl->ChooseAction(field); }
+
+Action NaiveBot::ChooseAction(const State &state) {
+  return impl->ChooseAction(state);
+}

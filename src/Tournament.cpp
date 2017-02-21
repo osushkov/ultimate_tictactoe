@@ -19,12 +19,14 @@ struct Tournament::TournamentImpl {
       auto bot1 = botBuilders[p1]();
       auto bot2 = botBuilders[p2]();
 
-      unsigned pr = playout(bot1.get(), bot2.get());
-      unsigned wi = pr == 0 ? p1 : p2;
-
-      wins[wi]++;
+      int pr = playout(bot1.get(), bot2.get());
       played[p1]++;
       played[p2]++;
+
+      if (pr != 0) {
+        unsigned wi = pr == -1 ? p1 : p2;
+        wins[wi]++;
+      }
     }
 
     return vmap<unsigned, float>(wins, [&played](unsigned numWins, unsigned i) {
@@ -32,8 +34,23 @@ struct Tournament::TournamentImpl {
     });
   }
 
-  unsigned playout(Bot* bot1, Bot* bot2) {
-    return 0;
+  int playout(naivebot::NaiveBot* bot1, naivebot::NaiveBot* bot2) {
+    naivebot::State curState;
+    int curPlayer = 0;
+
+    while (!curState.IsTerminal()) {
+      auto action = (curPlayer == 0 ? bot1 : bot2)->ChooseAction(curState);
+      curState = curState.SuccessorState(action);
+      curPlayer = 1 - curPlayer;
+    }
+
+    if (curState.IsWin()) {
+      return curPlayer == 0 ? -1 : 1;
+    } else if (curState.IsLoss()) {
+      return curPlayer == 0 ? 1 : -1;
+    } else {
+      return 0;
+    }
   }
 };
 
