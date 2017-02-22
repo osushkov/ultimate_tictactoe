@@ -3,6 +3,7 @@
 #include "../../util/Util.hpp"
 #include "../State.hpp"
 #include <cassert>
+#include <iostream>
 
 using namespace naivebot;
 using namespace naivebot::mcts;
@@ -36,6 +37,7 @@ Node *Node::Expand(void) {
     isLeaf = false;
   }
 
+  assert(!state.IsTerminal());
   auto &chosenAction = available[rand() % available.size()];
   State childState = state.SuccessorState(chosenAction);
 

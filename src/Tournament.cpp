@@ -13,6 +13,7 @@ struct Tournament::TournamentImpl {
     vector<unsigned> played(botBuilders.size(), 0);
 
     for (unsigned i = 0; i < rounds; i++) {
+      cout << "round: " << i << endl;
       unsigned p1 = rand() % botBuilders.size();
       unsigned p2 = rand() % botBuilders.size();
 
@@ -30,7 +31,7 @@ struct Tournament::TournamentImpl {
     }
 
     return vmap<unsigned, float>(wins, [&played](unsigned numWins, unsigned i) {
-      return numWins / static_cast<float>(played[i]);
+      return played[i] == 0 ? 0.0 : (numWins / static_cast<float>(played[i]));
     });
   }
 

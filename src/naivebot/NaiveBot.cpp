@@ -22,7 +22,7 @@ struct NaiveBot::NaiveBotImpl {
   }
 
   Action ChooseAction(const State &state) {
-    mcts::MCTS mcts(10000);
+    mcts::MCTS mcts(1000);
     vector<mcts::ActionUtility> actions = mcts.ComputeUtilities(state);
     return actions.front().first;
   }

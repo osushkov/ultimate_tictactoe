@@ -39,6 +39,7 @@ public:
 
   ~State() = default;
 
+  State& operator=(const State& other);
   bool operator==(const State &other) const;
 
   // Returns a hash of this state.

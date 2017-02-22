@@ -97,7 +97,7 @@ static TopCellState calculateGridState(const array<CellState, NUM_CELLS> &grid,
     }
   }
 
-  if (numUnfilled > 4) {
+  if (numUnfilled >= 7) {
     return TopCellState::UNDECIDED;
   }
 
@@ -140,7 +140,7 @@ static TopCellState calculateGridState(const array<TopCellState, NUM_TOP_CELLS> 
     }
   }
 
-  if (numNeutral > 4) {
+  if (numNeutral >= 7) {
     return numUnfilled == 0 ? TopCellState::DRAW : TopCellState::UNDECIDED;
   }
 
@@ -174,6 +174,15 @@ State::State(const State &other)
     : cells(other.cells), topCells(other.topCells), isTerminal(other.isTerminal),
       isWin(other.isWin), isLoss(other.isLoss) {}
 
+State& State::operator=(const State& other) {
+    cells = other.cells;
+    topCells = other.topCells;
+    isTerminal = other.isTerminal;
+    isWin = other.isWin;
+    isLoss = other.isLoss;
+    return *this;
+}
+
 bool State::operator==(const State &other) const {
   assert(cells.size() == other.cells.size());
   for (unsigned i = 0; i < cells.size(); i++) {
@@ -202,9 +211,11 @@ void State::Output(std::ostream &out) const {
     out << endl;
   }
 
-  out << "raw cells:" << endl;
+  out << endl << "raw cells:" << endl;
   for (unsigned y = 0; y < 9; y++) {
+    if (y%3 == 0) { out << endl; }
     for (unsigned x = 0; x < 9; x++) {
+      if (x%3 == 0) { out << " "; }
       out << cells[x + y * 9];
     }
     out << endl;
@@ -213,6 +224,9 @@ void State::Output(std::ostream &out) const {
 
 vector<Action> State::AvailableActions(void) const {
   vector<Action> result;
+  if (IsTerminal()) {
+    return result;
+  }
 
   for (unsigned ty = 0; ty < 3; ty++) {
     for (unsigned tx = 0; tx < 3; tx++) {
@@ -238,6 +252,10 @@ vector<Action> State::AvailableActions(void) const {
 
 State State::SuccessorState(const Action &action) const {
   State result(*this);
+
+  if (result.isTerminal || result.isWin || result.isLoss) {
+     Output(cout);
+  }
   assert(!result.isTerminal && !result.isWin && !result.isLoss);
 
   unsigned topX = action.x / 3;
@@ -262,7 +280,7 @@ State State::SuccessorState(const Action &action) const {
       result.isWin = true;
       break;
     case TopCellState::OPPONENT_TOKEN:
-      assert(false); // This should never happen.
+        assert(false); // This should never happen.
       break;
     case TopCellState::UNDECIDED:
       break;
