@@ -8,8 +8,11 @@ using namespace naivebot;
 
 struct NaiveBot::NaiveBotImpl {
   int botId;
+  unsigned microsecondsPerMove;
+  bool useEGreedy;
 
-  NaiveBotImpl() : botId(1) {};
+  NaiveBotImpl(unsigned microsecondsPerMove, bool useEGreedy) :
+        botId(1), microsecondsPerMove(microsecondsPerMove), useEGreedy(useEGreedy) {};
 
   void SetBotId(int botId) {
     assert(botId == 1 || botId == 2);
@@ -22,7 +25,7 @@ struct NaiveBot::NaiveBotImpl {
   }
 
   Action ChooseAction(const State &state) {
-    mcts::MCTS mcts(1000);
+    mcts::MCTS mcts(microsecondsPerMove, useEGreedy);
     vector<mcts::ActionUtility> actions = mcts.ComputeUtilities(state);
     return actions.front().first;
   }
@@ -63,7 +66,8 @@ struct NaiveBot::NaiveBotImpl {
   }
 };
 
-NaiveBot::NaiveBot() : impl(new NaiveBotImpl()) {}
+NaiveBot::NaiveBot(unsigned microsecondsPerMove, bool useEGreedy) :
+        impl(new NaiveBotImpl(microsecondsPerMove, useEGreedy)) {}
 NaiveBot::~NaiveBot() = default;
 
 void NaiveBot::SetBotId(int botId) { impl->SetBotId(botId); }

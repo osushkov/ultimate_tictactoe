@@ -28,7 +28,7 @@ public:
 
   // TODO: should add a policy object as input that will choose which edge to select.
   // For now it's simply e-greedy.
-  Node *Select(double pRandom); // Should only be done on non-leaves.
+  Node *Select(bool useEGreedy); // Should only be done on non-leaves.
 
   void AddUtility(double utility);
 
@@ -46,9 +46,14 @@ private:
   bool isLeaf;
 
   unsigned totalTrials;
+  unsigned totalWins;
+  unsigned totalLosses;
   double sumUtility;
 
   vector<Action> nonExpandedActions(void);
+
+  Node* eGreedySelect(void);
+  Node* UCB1Select(void);
 };
 }
 }

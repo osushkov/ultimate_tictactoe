@@ -1,27 +1,39 @@
 
 #include "MCTS.hpp"
 #include "Node.hpp"
+#include "../../util/Timer.hpp"
 
-static const double P_RANDOM = 0.2;
+static const unsigned MCTS_ITER_CHUNK = 100;
 
 using namespace naivebot;
 using namespace naivebot::mcts;
 
 struct MCTS::MCTSImpl {
-  unsigned mctsIters;
+  unsigned timeoutMicroseconds;
+  bool useEGreedy;
 
   uptr<Node> root;
 
-  MCTSImpl(unsigned iters) : mctsIters(iters) {};
+  MCTSImpl(unsigned timeoutMicroseconds, bool useEGreedy) :
+        timeoutMicroseconds(timeoutMicroseconds), useEGreedy(useEGreedy) {};
 
   // TODO: handle the fact that the lifetime of an action returned here has to be less than or
   // equal to the lifetime of the MCTS.
   vector<ActionUtility> ComputeUtilities(const State &startState) {
     root = make_unique<Node>(startState, 0);
 
-    for (unsigned i = 0; i < mctsIters; i++) {
-      mcIteration(root.get());
+    Timer timer;
+    timer.Start();
+
+    unsigned totalIters = 0;
+    while (timer.GetElapsedMicroseconds() < timeoutMicroseconds) {
+      for (unsigned i = 0; i < MCTS_ITER_CHUNK; i++) {
+        mcIteration(root.get());
+        totalIters++;
+      }
     }
+
+    timer.Stop();
 
     vector<ActionUtility> result = root->GetActionUtilities();
     sort(result.begin(), result.end(),
@@ -37,7 +49,7 @@ struct MCTS::MCTSImpl {
     Node *cur = root;
     while (!cur->IsLeaf()) {
       pathFromRoot.push_back(cur);
-      cur = cur->Select(P_RANDOM);
+      cur = cur->Select(useEGreedy);
     }
     pathFromRoot.push_back(cur);
 
@@ -90,7 +102,7 @@ struct MCTS::MCTSImpl {
   }
 };
 
-MCTS::MCTS(unsigned iters) : impl(new MCTSImpl(iters)) {}
+MCTS::MCTS(unsigned iters, bool useEGreedy) : impl(new MCTSImpl(iters, useEGreedy)) {}
 
 MCTS::~MCTS() = default;
 

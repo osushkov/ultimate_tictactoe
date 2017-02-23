@@ -40,6 +40,8 @@ struct Tournament::TournamentImpl {
     int curPlayer = 0;
 
     while (!curState.IsTerminal()) {
+    //   curState.Output(cout);
+    //   getchar();
       auto action = (curPlayer == 0 ? bot1 : bot2)->ChooseAction(curState);
       curState = curState.SuccessorState(action);
       curPlayer = 1 - curPlayer;

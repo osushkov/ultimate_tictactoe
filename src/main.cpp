@@ -10,7 +10,10 @@ using namespace std;
 static void runTournament(void) {
   vector<function<uptr<naivebot::NaiveBot>()>> bots;
   bots.push_back([]() {
-    return make_unique<naivebot::NaiveBot>();
+    return make_unique<naivebot::NaiveBot>(100000, false);
+  });
+  bots.push_back([]() {
+    return make_unique<naivebot::NaiveBot>(100000, true);
   });
 
   Tournament tournament;

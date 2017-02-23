@@ -10,7 +10,7 @@ namespace naivebot {
 
 class NaiveBot : public Bot {
 public:
-  NaiveBot();
+  NaiveBot(unsigned microsecondsPerMove, bool useEGreedy);
   ~NaiveBot();
 
   void SetBotId(int botId) override;
