@@ -53,7 +53,7 @@ public:
 
   // Returns a successor state when the given action is applied in this state.
   // This function can be stochastic and return a different State every time it is called.
-  State SuccessorState(const Action &action) const;
+  State SuccessorState(Action action) const;
 
   bool IsTerminal(void) const;
   bool IsWin(void) const;

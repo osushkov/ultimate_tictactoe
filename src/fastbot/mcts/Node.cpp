@@ -5,25 +5,25 @@
 #include <cassert>
 #include <iostream>
 
-static constexpr double P_RANDOM = 0.2;
+static constexpr float P_RANDOM = 0.2f;
 static constexpr float UCB1c = 0.1f;//sqrtf(2.0f);
 
 using namespace fastbot;
 using namespace fastbot::mcts;
 
-Node::Node(const State &state, unsigned playerIndex)
-    : state(state), playerIndex(playerIndex), isLeaf(true), totalTrials(0), totalWins(0), totalLosses(0), sumUtility(0.0) {}
+Node::Node(const State &state, unsigned char playerIndex)
+    : state(state), playerIndex(playerIndex), isLeaf(true), totalTrials(0), sumUtility(0.0f) {}
 
 bool Node::IsLeaf(void) const { return isLeaf; }
 
-unsigned Node::PlayerIndex(void) const { return playerIndex; }
+unsigned char Node::PlayerIndex(void) const { return playerIndex; }
 
 State Node::GetState(void) const { return state; }
 
-vector<pair<Action, double>> Node::GetActionUtilities(void) const {
-  vector<pair<Action, double>> result;
+vector<pair<Action, float>> Node::GetActionUtilities(void) const {
+  vector<pair<Action, float>> result;
   for (const auto &edge : children) {
-    result.push_back(make_pair(edge.first, edge.second->ExpectedUtility(playerIndex)));
+    result.emplace_back(edge.first, edge.second->ExpectedUtility(playerIndex));
   }
   return result;
 }
@@ -59,21 +59,15 @@ Node *Node::Select(bool useEGreedy) {
   }
 }
 
-void Node::AddUtility(double utility) {
+void Node::AddUtility(float utility) {
   totalTrials++;
   sumUtility += utility;
-
-  if (utility > 0.9f) {
-    totalWins++;
-  } else if (utility < -0.9f) {
-    totalLosses++;
-  }
 }
 
-double Node::ExpectedUtility(unsigned playerIndex) const {
+float Node::ExpectedUtility(unsigned char playerIndex) const {
   assert(totalTrials > 0);
 
-  double p = sumUtility / totalTrials;
+  float p = sumUtility / totalTrials;
   if (this->playerIndex == playerIndex) {
     return p;
   } else {

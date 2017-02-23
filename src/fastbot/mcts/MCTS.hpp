@@ -9,7 +9,7 @@ namespace fastbot {
 namespace mcts {
 
 // An action and the probability of winning by taking that action.
-using ActionUtility = pair<Action, double>;
+using ActionUtility = pair<Action, float>;
 
 // Monte-Carlo Tree Search.
 class MCTS {

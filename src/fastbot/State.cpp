@@ -238,8 +238,9 @@ vector<Action> State::AvailableActions(void) const {
 
         for (unsigned y = sy; y < ey; y++) {
           for (unsigned x = sx; x < ex; x++) {
-            if (cells[x + y * 9] == CellState::EMPTY) {
-              result.emplace_back(x, y);
+            unsigned char p = x + y * 9;
+            if (cells[p] == CellState::EMPTY) {
+              result.emplace_back(p);
             }
           }
         }
@@ -250,7 +251,7 @@ vector<Action> State::AvailableActions(void) const {
   return result;
 }
 
-State State::SuccessorState(const Action &action) const {
+State State::SuccessorState(Action action) const {
   State result(*this);
 
   if (result.isTerminal || result.isWin || result.isLoss) {
@@ -258,12 +259,12 @@ State State::SuccessorState(const Action &action) const {
   }
   assert(!result.isTerminal && !result.isWin && !result.isLoss);
 
-  unsigned topX = action.x / 3;
-  unsigned topY = action.y / 3;
+  unsigned topX = (action % 9) / 3;
+  unsigned topY = (action / 9) / 3;
   assert(result.topCells[topX + topY * 3] == TopCellState::UNDECIDED);
 
-  assert(result.cells[action.x + action.y * 9] == CellState::EMPTY);
-  result.cells[action.x + action.y * 9] = CellState::MY_TOKEN;
+  assert(result.cells[action] == CellState::EMPTY);
+  result.cells[action] = CellState::MY_TOKEN;
 
   auto newTopState = calculateGridState(result.cells, topX * 3, topY * 3);
   result.topCells[topX + topY * 3] = newTopState;

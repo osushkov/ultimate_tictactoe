@@ -1,5 +1,5 @@
 
-#include "NaiveBot.hpp"
+#include "FastBot.hpp"
 #include "mcts/MCTS.hpp"
 #include <sstream>
 #include <cassert>
@@ -21,7 +21,7 @@ struct FastBot::FastBotImpl {
 
   pair<int, int> ChooseAction(const string &field) {
     auto action = ChooseAction(parseState(field));
-    return make_pair(action.x, action.y);
+    return make_pair(action % 9, action / 9);
   }
 
   Action ChooseAction(const State &state) {
