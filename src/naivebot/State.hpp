@@ -55,6 +55,8 @@ public:
   // This function can be stochastic and return a different State every time it is called.
   State SuccessorState(const Action &action) const;
 
+  CellState Get(unsigned cellIndex) const;
+
   bool IsTerminal(void) const;
   bool IsWin(void) const;
   bool IsLoss(void) const;

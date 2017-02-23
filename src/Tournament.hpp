@@ -4,6 +4,7 @@
 #include <functional>
 
 #include "naivebot/NaiveBot.hpp"
+#include "fastbot/FastBot.hpp"
 #include "util/Common.hpp"
 #include "Bot.hpp"
 

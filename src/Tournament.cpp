@@ -2,6 +2,10 @@
 #include "Tournament.hpp"
 #include "util/Common.hpp"
 
+static naivebot::State convert(const fastbot::State &state) {
+  return naivebot::State();
+}
+
 struct Tournament::TournamentImpl {
   TournamentImpl() = default;
   ~TournamentImpl() = default;
@@ -18,7 +22,10 @@ struct Tournament::TournamentImpl {
       unsigned p2 = rand() % botBuilders.size();
 
       auto bot1 = botBuilders[p1]();
+      bot1->SetBotId(1);
+
       auto bot2 = botBuilders[p2]();
+      bot2->SetBotId(2);
 
       int pr = playout(bot1.get(), bot2.get());
       played[p1]++;
@@ -40,8 +47,6 @@ struct Tournament::TournamentImpl {
     int curPlayer = 0;
 
     while (!curState.IsTerminal()) {
-    //   curState.Output(cout);
-    //   getchar();
       auto action = (curPlayer == 0 ? bot1 : bot2)->ChooseAction(curState);
       curState = curState.SuccessorState(action);
       curPlayer = 1 - curPlayer;

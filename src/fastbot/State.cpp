@@ -292,6 +292,10 @@ State State::SuccessorState(Action action) const {
   return result;
 }
 
+CellState State::Get(unsigned cellIndex) const {
+  return cells[cellIndex];
+}
+
 bool State::IsTerminal(void) const { return isTerminal; }
 bool State::IsWin(void) const { return isWin; }
 bool State::IsLoss(void) const { return isLoss; }
