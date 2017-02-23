@@ -10,14 +10,14 @@ using namespace std;
 static void runTournament(void) {
   vector<function<uptr<naivebot::NaiveBot>()>> bots;
   bots.push_back([]() {
-    return make_unique<naivebot::NaiveBot>(100000, false);
+    return make_unique<naivebot::NaiveBot>(10000, false);
   });
   bots.push_back([]() {
-    return make_unique<naivebot::NaiveBot>(100000, true);
+    return make_unique<naivebot::NaiveBot>(10000, true);
   });
 
   Tournament tournament;
-  vector<float> pWin = tournament.RunTournament(bots, 20);
+  vector<float> pWin = tournament.RunTournament(bots, 1);
 
   cout << "pwin:" << endl;
   for (unsigned i = 0; i < pWin.size(); i++) {

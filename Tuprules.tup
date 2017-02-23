@@ -9,7 +9,8 @@ ifdef RELEASE
 endif
 
 ifdef DEBUG
-  CCFLAGS += -g
+  CCFLAGS += -pg
+  CLFLAGS += -pg
 endif
 
 CLFLAGS += -L/usr/local/lib
