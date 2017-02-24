@@ -27,10 +27,10 @@ static void runNaiveTournament(void) {
 
 static void runNaiveVsFastTournament(void) {
   function<uptr<naivebot::NaiveBot>()> bot1 = []() {
-    return make_unique<naivebot::NaiveBot>(10000, false);
+    return make_unique<naivebot::NaiveBot>(50000, false);
   };
   function<uptr<fastbot::FastBot>()> bot2 = []() {
-    return make_unique<fastbot::FastBot>(10000, false);
+    return make_unique<fastbot::FastBot>(50000, false);
   };
 
   Tournament tournament;

@@ -12,7 +12,8 @@ using namespace fastbot;
 using namespace fastbot::mcts;
 
 Node::Node(const State &state, unsigned char playerIndex)
-    : state(state), playerIndex(playerIndex), isLeaf(true), totalTrials(0), sumUtility(0.0f) {}
+    : state(state), nonExpandedActions(state.AvailableActions()), playerIndex(playerIndex),
+      isLeaf(true), totalTrials(0), sumUtility(0.0f) {}
 
 bool Node::IsLeaf(void) const { return isLeaf; }
 
@@ -31,20 +32,23 @@ vector<pair<Action, float>> Node::GetActionUtilities(void) const {
 Node *Node::Expand(void) {
   assert(isLeaf);
 
-  vector<Action> available = nonExpandedActions();
-  if (available.empty()) { // This can happen at a terminal game state.
+  if (nonExpandedActions.empty()) {
     return nullptr;
-  }
-
-  if (available.size() == 1) {
+  } else if (nonExpandedActions.size() == 1) {
     isLeaf = false;
   }
 
   assert(!state.IsTerminal());
-  auto &chosenAction = available[rand() % available.size()];
-  State childState = state.SuccessorState(chosenAction);
 
+  unsigned chosenIndex = rand() % nonExpandedActions.size();
+  auto chosenAction = nonExpandedActions[chosenIndex];
+
+  nonExpandedActions[chosenIndex] = nonExpandedActions.back();
+  nonExpandedActions.pop_back();
+
+  State childState = state.SuccessorState(chosenAction);
   children.emplace_back(chosenAction, make_unique<Node>(childState, 1 - playerIndex));
+
   return children.back().second.get();
 }
 
@@ -73,27 +77,6 @@ float Node::ExpectedUtility(unsigned char playerIndex) const {
   } else {
     return -p;
   }
-}
-
-// This is just a quick and dirty hack, can be more efficient but on small branch factor
-// problems doesnt really make a difference.
-vector<Action> Node::nonExpandedActions(void) {
-  vector<Action> stateActions = state.AvailableActions();
-
-  vector<Action> result;
-  for (auto &sa : stateActions) {
-    bool shouldAdd = true;
-    for (auto &c : children) {
-      if (sa == c.first) {
-        shouldAdd = false;
-        break;
-      }
-    }
-    if (shouldAdd) {
-      result.push_back(sa);
-    }
-  }
-  return result;
 }
 
 Node* Node::eGreedySelect(void) {

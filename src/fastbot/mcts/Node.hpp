@@ -38,6 +38,7 @@ public:
 private:
   State state;
   vector<Edge> children;
+  vector<Action> nonExpandedActions;
 
   // This should be an enum maybe. This signifies which players turn it is for this node,
   // since this is an adversarial game, it is not always "my" turn, where "me" is defined
@@ -47,8 +48,6 @@ private:
 
   unsigned totalTrials;
   float sumUtility;
-
-  vector<Action> nonExpandedActions(void);
 
   Node* eGreedySelect(void);
   Node* UCB1Select(void);
