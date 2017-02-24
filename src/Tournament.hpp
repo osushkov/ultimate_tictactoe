@@ -16,6 +16,10 @@ public:
   vector<float> RunTournament(const vector<function<uptr<naivebot::NaiveBot>()>> &botBuilders,
                               unsigned rounds);
 
+  vector<float> RunTournament(const function<uptr<naivebot::NaiveBot>()> &naivebotBuilder,
+                              const function<uptr<fastbot::FastBot>()> &fastbotBuilder,
+                              unsigned rounds);
+
 private:
   struct TournamentImpl;
   uptr<TournamentImpl> impl;

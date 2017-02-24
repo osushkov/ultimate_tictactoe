@@ -7,17 +7,12 @@
 using namespace fastbot;
 
 struct FastBot::FastBotImpl {
-  int botId;
+  unsigned char botId;
   unsigned microsecondsPerMove;
   bool useEGreedy;
 
   FastBotImpl(unsigned microsecondsPerMove, bool useEGreedy) :
         botId(1), microsecondsPerMove(microsecondsPerMove), useEGreedy(useEGreedy) {};
-
-  void SetBotId(int botId) {
-    assert(botId == 1 || botId == 2);
-    this->botId = botId;
-  };
 
   pair<int, int> ChooseAction(const string &field) {
     auto action = ChooseAction(parseState(field));
@@ -40,11 +35,10 @@ struct FastBot::FastBotImpl {
       int v = stringToInt(rawValues[i]);
       assert(v >= 0 && v <= 2);
 
-      fieldCells[i] = v == 0 ? CellState::EMPTY :
-          (v == botId ? CellState::MY_TOKEN : CellState::OPPONENT_TOKEN);
+      fieldCells[i] = v == 0 ? CellState::EMPTY : static_cast<CellState>(v);
     }
 
-    return State(fieldCells);
+    return State(fieldCells, botId);
   }
 
   std::vector<std::string> &split(
@@ -70,7 +64,12 @@ FastBot::FastBot(unsigned microsecondsPerMove, bool useEGreedy) :
         impl(new FastBotImpl(microsecondsPerMove, useEGreedy)) {}
 FastBot::~FastBot() = default;
 
-void FastBot::SetBotId(int botId) { impl->SetBotId(botId); }
+void FastBot::SetBotId(unsigned char botId) {
+  assert(botId == 1 || botId == 2);
+  impl->botId = botId;
+}
+
+unsigned char FastBot::GetBotId(void) const { return impl->botId; }
 
 pair<int, int> FastBot::ChooseAction(const string &field) { return impl->ChooseAction(field); }
 

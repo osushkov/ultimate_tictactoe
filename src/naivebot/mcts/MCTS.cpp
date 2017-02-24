@@ -3,7 +3,7 @@
 #include "Node.hpp"
 #include "../../util/Timer.hpp"
 
-static const unsigned MCTS_ITER_CHUNK = 100;
+static const unsigned MCTS_ITER_CHUNK = 50;
 
 using namespace naivebot;
 using namespace naivebot::mcts;
@@ -33,6 +33,7 @@ struct MCTS::MCTSImpl {
       }
     }
 
+    // cout << "naive iters: " << totalIters << endl;
     timer.Stop();
 
     vector<ActionUtility> result = root->GetActionUtilities();

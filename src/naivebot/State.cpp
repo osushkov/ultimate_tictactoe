@@ -167,7 +167,7 @@ State::State(const array<CellState, NUM_CELLS> &fieldCells)
     }
   }
 
-  assert(calculateGridState(topCells) == TopCellState::UNDECIDED);
+  updateFlags();
 }
 
 State::State(const State &other)
@@ -269,22 +269,7 @@ State State::SuccessorState(const Action &action) const {
   result.topCells[topX + topY * 3] = newTopState;
 
   if (newTopState != TopCellState::UNDECIDED) {
-    auto newGameState = calculateGridState(result.topCells);
-
-    switch (newGameState) {
-    case TopCellState::DRAW:
-      result.isTerminal = true;
-      break;
-    case TopCellState::MY_TOKEN:
-      result.isTerminal = true;
-      result.isWin = true;
-      break;
-    case TopCellState::OPPONENT_TOKEN:
-        assert(false); // This should never happen.
-      break;
-    case TopCellState::UNDECIDED:
-      break;
-    }
+    result.updateFlags();
   }
 
   result.flipState();
@@ -317,4 +302,31 @@ void State::flipState(void) {
   }
 
   swap(isWin, isLoss);
+}
+
+void State::updateFlags(void) {
+  auto newGameState = calculateGridState(topCells);
+
+  switch (newGameState) {
+  case TopCellState::DRAW:
+    isTerminal = true;
+    isWin = false;
+    isLoss = false;
+    break;
+  case TopCellState::MY_TOKEN:
+    isTerminal = true;
+    isWin = true;
+    isLoss = false;
+    break;
+  case TopCellState::OPPONENT_TOKEN:
+    isTerminal = true;
+    isWin = false;
+    isLoss = true;
+    break;
+  case TopCellState::UNDECIDED:
+    isTerminal = false;
+    isWin = false;
+    isLoss = false;
+    break;
+  }
 }

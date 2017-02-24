@@ -70,6 +70,8 @@ private:
   // Whenever we make a move and want another agent to make a move, then we should "flip" the
   // board such that what are currently "our" tokens become "oppponent" tokens, and vice versa.
   void flipState(void);
+
+  void updateFlags(void);
 };
 }
 

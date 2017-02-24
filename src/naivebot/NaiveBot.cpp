@@ -7,17 +7,12 @@
 using namespace naivebot;
 
 struct NaiveBot::NaiveBotImpl {
-  int botId;
+  unsigned char botId;
   unsigned microsecondsPerMove;
   bool useEGreedy;
 
   NaiveBotImpl(unsigned microsecondsPerMove, bool useEGreedy) :
         botId(1), microsecondsPerMove(microsecondsPerMove), useEGreedy(useEGreedy) {};
-
-  void SetBotId(int botId) {
-    assert(botId == 1 || botId == 2);
-    this->botId = botId;
-  };
 
   pair<int, int> ChooseAction(const string &field) {
     auto action = ChooseAction(parseState(field));
@@ -70,7 +65,12 @@ NaiveBot::NaiveBot(unsigned microsecondsPerMove, bool useEGreedy) :
         impl(new NaiveBotImpl(microsecondsPerMove, useEGreedy)) {}
 NaiveBot::~NaiveBot() = default;
 
-void NaiveBot::SetBotId(int botId) { impl->SetBotId(botId); }
+void NaiveBot::SetBotId(unsigned char botId) {
+  assert(botId == 1 || botId == 2);
+  impl->botId = botId;
+}
+
+unsigned char NaiveBot::GetBotId(void) const { return impl->botId; }
 
 pair<int, int> NaiveBot::ChooseAction(const string &field) { return impl->ChooseAction(field); }
 

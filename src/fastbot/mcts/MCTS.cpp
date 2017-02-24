@@ -3,7 +3,7 @@
 #include "Node.hpp"
 #include "../../util/Timer.hpp"
 
-static const unsigned MCTS_ITER_CHUNK = 100;
+static const unsigned MCTS_ITER_CHUNK = 50;
 
 using namespace fastbot;
 using namespace fastbot::mcts;
@@ -33,6 +33,7 @@ struct MCTS::MCTSImpl {
       }
     }
 
+    // cout << "fast iters: " << totalIters << endl;
     timer.Stop();
 
     vector<ActionUtility> result = root->GetActionUtilities();

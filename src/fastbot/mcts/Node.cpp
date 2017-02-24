@@ -53,7 +53,7 @@ Node *Node::Select(bool useEGreedy) {
   assert(!children.empty());
 
   if (useEGreedy) {
-   return eGreedySelect();
+    return eGreedySelect();
   } else {
     return UCB1Select();
   }

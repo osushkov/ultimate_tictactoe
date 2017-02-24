@@ -13,9 +13,10 @@ public:
   FastBot(unsigned microsecondsPerMove, bool useEGreedy);
   ~FastBot();
 
-  void SetBotId(int botId) override;
-  pair<int, int> ChooseAction(const string &field) override;
+  void SetBotId(unsigned char botId) override;
+  unsigned char GetBotId(void) const override;
 
+  pair<int, int> ChooseAction(const string &field) override;
   Action ChooseAction(const State &state);
 
 private:

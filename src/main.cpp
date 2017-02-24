@@ -7,7 +7,7 @@
 
 using namespace std;
 
-static void runTournament(void) {
+static void runNaiveTournament(void) {
   vector<function<uptr<naivebot::NaiveBot>()>> bots;
   bots.push_back([]() {
     return make_unique<naivebot::NaiveBot>(10000, false);
@@ -25,11 +25,28 @@ static void runTournament(void) {
   }
 }
 
+static void runNaiveVsFastTournament(void) {
+  function<uptr<naivebot::NaiveBot>()> bot1 = []() {
+    return make_unique<naivebot::NaiveBot>(10000, false);
+  };
+  function<uptr<fastbot::FastBot>()> bot2 = []() {
+    return make_unique<fastbot::FastBot>(10000, false);
+  };
+
+  Tournament tournament;
+  vector<float> pWin = tournament.RunTournament(bot1, bot2, 100);
+
+  cout << "pwin:" << endl;
+  for (unsigned i = 0; i < pWin.size(); i++) {
+    cout << i << " : " << pWin[i] << endl;
+  }
+}
+
 int main() {
   srand(1337);
 
   cout << "hello world" << endl;
-  runTournament();
+  runNaiveVsFastTournament();
 
   // auto bot = make_unique<naivebot::NaiveBot>();
   //
