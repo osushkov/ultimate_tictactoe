@@ -39,10 +39,11 @@ std::ostream &fastbot::operator<<(std::ostream &stream, const TopCellState &tcs)
   return stream;
 }
 
-static array<array<unsigned char, 3>, 8> runIndices{{array<unsigned char, 3>{{0, 1, 2}}, array<unsigned char, 3>{{3, 4, 5}},
-                                                     array<unsigned char, 3>{{6, 7, 8}}, array<unsigned char, 3>{{0, 3, 6}},
-                                                     array<unsigned char, 3>{{1, 4, 7}}, array<unsigned char, 3>{{2, 5, 8}},
-                                                     array<unsigned char, 3>{{0, 4, 8}}, array<unsigned char, 3>{{2, 4, 6}}}};
+static array<array<unsigned char, 3>, 8> runIndices{
+    {array<unsigned char, 3>{{0, 1, 2}}, array<unsigned char, 3>{{3, 4, 5}},
+     array<unsigned char, 3>{{6, 7, 8}}, array<unsigned char, 3>{{0, 3, 6}},
+     array<unsigned char, 3>{{1, 4, 7}}, array<unsigned char, 3>{{2, 5, 8}},
+     array<unsigned char, 3>{{0, 4, 8}}, array<unsigned char, 3>{{2, 4, 6}}}};
 
 static unsigned char findRun(const array<unsigned char, NUM_TOP_CELLS> &grid) {
   for (unsigned i = 0; i < runIndices.size(); i++) {
@@ -138,7 +139,8 @@ static TopCellState calculateGridState(const array<TopCellState, NUM_TOP_CELLS> 
   }
 }
 
-State::State(unsigned char mySymbol) : mySymbol(mySymbol), isTerminal(false), isWin(false), isLoss(false) {
+State::State(unsigned char mySymbol)
+    : mySymbol(mySymbol), isTerminal(false), isWin(false), isLoss(false) {
   cells.fill(CellState::EMPTY);
   topCells.fill(TopCellState::UNDECIDED);
 }
@@ -160,14 +162,14 @@ State::State(const State &other)
     : cells(other.cells), topCells(other.topCells), mySymbol(other.mySymbol),
       isTerminal(other.isTerminal), isWin(other.isWin), isLoss(other.isLoss) {}
 
-State& State::operator=(const State& other) {
-    cells = other.cells;
-    topCells = other.topCells;
-    mySymbol = other.mySymbol;
-    isTerminal = other.isTerminal;
-    isWin = other.isWin;
-    isLoss = other.isLoss;
-    return *this;
+State &State::operator=(const State &other) {
+  cells = other.cells;
+  topCells = other.topCells;
+  mySymbol = other.mySymbol;
+  isTerminal = other.isTerminal;
+  isWin = other.isWin;
+  isLoss = other.isLoss;
+  return *this;
 }
 
 bool State::operator==(const State &other) const {
@@ -186,15 +188,6 @@ bool State::operator==(const State &other) const {
   return true;
 }
 
-size_t State::HashCode() const {
-    cout << "hash" << endl;
-  size_t result = mySymbol;
-  for (const auto &c : cells) {
-    result = 3 * result + (c == CellState::EMPTY ? 0 : (c == CellState::NAUGHT ? 1 : 2));
-  }
-  return result;
-}
-
 void State::Output(std::ostream &out) const {
   out << "top level:" << endl;
   for (unsigned y = 0; y < 3; y++) {
@@ -206,9 +199,13 @@ void State::Output(std::ostream &out) const {
 
   out << endl << "raw cells:" << endl;
   for (unsigned y = 0; y < 9; y++) {
-    if (y%3 == 0) { out << endl; }
+    if (y % 3 == 0) {
+      out << endl;
+    }
     for (unsigned x = 0; x < 9; x++) {
-      if (x%3 == 0) { out << " "; }
+      if (x % 3 == 0) {
+        out << " ";
+      }
       out << cells[x + y * 9];
     }
     out << endl;
@@ -244,12 +241,37 @@ vector<Action> State::AvailableActions(void) const {
   return result;
 }
 
+Action State::ChooseRandomAction(void) const {
+  assert(!IsTerminal());
+
+  array<Action, NUM_CELLS> availableActions;
+  unsigned numAvailable = 0;
+
+  for (unsigned ty = 0; ty < 3; ty++) {
+    for (unsigned tx = 0; tx < 3; tx++) {
+      if (topCells[tx + ty * 3] == TopCellState::UNDECIDED) {
+        unsigned sy = ty * 3;
+        unsigned ey = sy + 3;
+        unsigned sx = tx * 3;
+        unsigned ex = sx + 3;
+
+        for (unsigned y = sy; y < ey; y++) {
+          for (unsigned x = sx; x < ex; x++) {
+            unsigned char p = x + y * 9;
+            if (cells[p] == CellState::EMPTY) {
+              availableActions[numAvailable++] = p;
+            }
+          }
+        }
+      }
+    }
+  }
+
+  return availableActions[rand() % numAvailable];
+}
+
 State State::SuccessorState(Action action) const {
   State result(*this);
-
-  if (result.isTerminal || result.isWin || result.isLoss) {
-     Output(cout);
-  }
   assert(!result.isTerminal && !result.isWin && !result.isLoss);
 
   unsigned topX = (action % 9) / 3;
@@ -270,13 +292,9 @@ State State::SuccessorState(Action action) const {
   return result;
 }
 
-CellState State::GetCellState(unsigned cellIndex) const {
-  return cells[cellIndex];
-}
+CellState State::GetCellState(unsigned cellIndex) const { return cells[cellIndex]; }
 
-unsigned char State::GetMySymbol(void) const {
-  return mySymbol;
-}
+unsigned char State::GetMySymbol(void) const { return mySymbol; }
 
 bool State::IsTerminal(void) const { return isTerminal; }
 bool State::IsWin(void) const { return isWin; }

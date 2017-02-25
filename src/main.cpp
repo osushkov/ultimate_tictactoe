@@ -1,23 +1,25 @@
 
+#include "BotIO.hpp"
+#include "Tournament.hpp"
+#include "naivebot/NaiveBot.hpp"
 #include <cstdlib>
 #include <iostream>
-#include "Tournament.hpp"
-#include "BotIO.hpp"
-#include "naivebot/NaiveBot.hpp"
 
 using namespace std;
 
-static void runNaiveTournament(void) {
-  vector<function<uptr<naivebot::NaiveBot>()>> bots;
-  bots.push_back([]() {
-    return make_unique<naivebot::NaiveBot>(10000, false);
-  });
-  bots.push_back([]() {
-    return make_unique<naivebot::NaiveBot>(10000, true);
-  });
+static void runFastTournament(void) {
+  vector<fastbot::Spec> botSpecs;
+  botSpecs.push_back(fastbot::Spec(0.1f, 0.4f, 0.3f, 0.2f));
+  botSpecs.push_back(fastbot::Spec(0.1f, 0.1f, 0.3f, 0.2f));
+  botSpecs.push_back(fastbot::Spec(0.1f, 0.2f, 0.3f, 0.2f));
+
+  vector<function<uptr<fastbot::FastBot>()>> bots;
+  for (const auto &spec : botSpecs) {
+    bots.push_back([&spec]() { return make_unique<fastbot::FastBot>(50000, spec); });
+  }
 
   Tournament tournament;
-  vector<float> pWin = tournament.RunTournament(bots, 1);
+  vector<float> pWin = tournament.RunTournament(bots, 50);
 
   cout << "pwin:" << endl;
   for (unsigned i = 0; i < pWin.size(); i++) {
@@ -30,7 +32,7 @@ static void runNaiveVsFastTournament(void) {
     return make_unique<naivebot::NaiveBot>(50000, false);
   };
   function<uptr<fastbot::FastBot>()> bot2 = []() {
-    return make_unique<fastbot::FastBot>(50000, false);
+    return make_unique<fastbot::FastBot>(50000, fastbot::Spec(0.1f, 0.1f, 0.3f, 0.2f));
   };
 
   Tournament tournament;
@@ -46,8 +48,8 @@ int main() {
   srand(1337);
 
   cout << "hello world" << endl;
-  runNaiveVsFastTournament();
-
+  // runNaiveVsFastTournament();
+  runFastTournament();
   // auto bot = make_unique<naivebot::NaiveBot>();
   //
   // BotIO botIO(std::move(bot));

@@ -1,19 +1,19 @@
 #pragma once
 
-#include <vector>
 #include <functional>
+#include <vector>
 
-#include "naivebot/NaiveBot.hpp"
-#include "fastbot/FastBot.hpp"
-#include "util/Common.hpp"
 #include "Bot.hpp"
+#include "fastbot/FastBot.hpp"
+#include "naivebot/NaiveBot.hpp"
+#include "util/Common.hpp"
 
 class Tournament {
 public:
   Tournament();
   ~Tournament();
 
-  vector<float> RunTournament(const vector<function<uptr<naivebot::NaiveBot>()>> &botBuilders,
+  vector<float> RunTournament(const vector<function<uptr<fastbot::FastBot>()>> &fastbotBuilder,
                               unsigned rounds);
 
   vector<float> RunTournament(const function<uptr<naivebot::NaiveBot>()> &naivebotBuilder,

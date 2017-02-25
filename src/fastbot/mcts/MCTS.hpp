@@ -3,6 +3,7 @@
 
 #include "../../util/Common.hpp"
 #include "../Action.hpp"
+#include "../Spec.hpp"
 #include "../State.hpp"
 
 namespace fastbot {
@@ -14,7 +15,7 @@ using ActionUtility = pair<Action, float>;
 // Monte-Carlo Tree Search.
 class MCTS {
 public:
-  MCTS(unsigned timeoutMicroseconds, bool useEGreedy);
+  MCTS(unsigned timeoutMicroseconds, const Spec &spec);
   virtual ~MCTS();
 
   // Sorted list of action utilities.

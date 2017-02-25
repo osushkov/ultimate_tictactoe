@@ -1,7 +1,7 @@
 
 #include "MCTS.hpp"
-#include "Node.hpp"
 #include "../../util/Timer.hpp"
+#include "Node.hpp"
 
 static const unsigned MCTS_ITER_CHUNK = 50;
 
@@ -14,8 +14,8 @@ struct MCTS::MCTSImpl {
 
   uptr<Node> root;
 
-  MCTSImpl(unsigned timeoutMicroseconds, bool useEGreedy) :
-        timeoutMicroseconds(timeoutMicroseconds), useEGreedy(useEGreedy) {};
+  MCTSImpl(unsigned timeoutMicroseconds, bool useEGreedy)
+      : timeoutMicroseconds(timeoutMicroseconds), useEGreedy(useEGreedy){};
 
   // TODO: handle the fact that the lifetime of an action returned here has to be less than or
   // equal to the lifetime of the MCTS.
@@ -33,7 +33,7 @@ struct MCTS::MCTSImpl {
       }
     }
 
-    // cout << "naive iters: " << totalIters << endl;
+    cout << "naive iters: " << totalIters << endl;
     timer.Stop();
 
     vector<ActionUtility> result = root->GetActionUtilities();

@@ -6,14 +6,14 @@
 #include <iostream>
 
 static constexpr float P_RANDOM = 0.2f;
-static constexpr float UCB1c = 0.1f;//sqrtf(2.0f);
+static constexpr float UCB1c = 0.1f; // sqrtf(2.0f);
 
 using namespace fastbot;
 using namespace fastbot::mcts;
 
-Node::Node(const State &state, unsigned char playerIndex)
+Node::Node(const State &state, unsigned char playerIndex, unsigned depth)
     : state(state), nonExpandedActions(state.AvailableActions()), playerIndex(playerIndex),
-      isLeaf(true), totalTrials(0), sumUtility(0.0f) {}
+      depth(depth), isLeaf(true), totalTrials(0), sumUtility(0.0f) {}
 
 bool Node::IsLeaf(void) const { return isLeaf; }
 
@@ -47,20 +47,20 @@ Node *Node::Expand(void) {
   nonExpandedActions.pop_back();
 
   State childState = state.SuccessorState(chosenAction);
-  children.emplace_back(chosenAction, make_unique<Node>(childState, 1 - playerIndex));
+  children.emplace_back(chosenAction, make_unique<Node>(childState, 1 - playerIndex, depth + 1));
 
   return children.back().second.get();
 }
 
-Node *Node::Select(bool useEGreedy) {
+Node *Node::Select(const Spec &spec) {
   assert(!isLeaf);
   assert(!children.empty());
 
-  if (useEGreedy) {
-    return eGreedySelect();
-  } else {
-    return UCB1Select();
-  }
+  // if (useEGreedy) {
+  //   return eGreedySelect();
+  // } else {
+  return UCB1Select(spec);
+  // }
 }
 
 void Node::AddUtility(float utility) {
@@ -79,50 +79,49 @@ float Node::ExpectedUtility(unsigned char playerIndex) const {
   }
 }
 
-Node* Node::eGreedySelect(void) {
-    bool chooseRandom = Util::RandInterval(0.0, 1.0) < P_RANDOM;
-    if (chooseRandom) {
-      return children[rand() % children.size()].second.get();
-    } else {
-      Node *result = nullptr;
-      double bestUtility = 0.0;
-
-      for (auto &edge : children) {
-        double utility = edge.second->ExpectedUtility(this->playerIndex);
-        if (result == nullptr || utility > bestUtility) {
-          bestUtility = utility;
-          result = edge.second.get();
-        }
-      }
-
-      assert(result != nullptr);
-      return result;
-    }
-}
-
-Node* Node::UCB1Select(void) {
-    if (Util::RandInterval(0.0, 1.0) < 0.3f) {
-      return children[rand() % children.size()].second.get();
-    }
-
+Node *Node::eGreedySelect(void) {
+  bool chooseRandom = Util::RandInterval(0.0, 1.0) < P_RANDOM;
+  if (chooseRandom) {
+    return children[rand() % children.size()].second.get();
+  } else {
     Node *result = nullptr;
     double bestUtility = 0.0;
 
     for (auto &edge : children) {
-        Node* cn = edge.second.get();
-
-        float eu = cn->ExpectedUtility(this->playerIndex);
-        float eb = UCB1c * sqrtf(log(static_cast<float>(totalTrials)) / static_cast<float>(cn->totalTrials));
-        // float rw = Util::RandInterval(0.0f, 1.0f);
-        float w = eu + eb;// + rw;
-
-        // cout << eu << " " << eb << endl;
-
-        if (result == nullptr || w > bestUtility) {
-            bestUtility = w;
-            result = cn;
-        }
+      double utility = edge.second->ExpectedUtility(this->playerIndex);
+      if (result == nullptr || utility > bestUtility) {
+        bestUtility = utility;
+        result = edge.second.get();
+      }
     }
 
+    assert(result != nullptr);
     return result;
+  }
+}
+
+Node *Node::UCB1Select(const Spec &spec) {
+  if (Util::RandInterval(0.0, 1.0) < spec.pRandomSelect) {
+    return children[rand() % children.size()].second.get();
+  }
+
+  Node *result = nullptr;
+  float bestUtility = 0.0f;
+
+  for (auto &edge : children) {
+    Node *cn = edge.second.get();
+
+    float eu = cn->ExpectedUtility(this->playerIndex);
+    float eb = sqrtf(log(static_cast<float>(totalTrials)) / static_cast<float>(cn->totalTrials));
+    float ebw = spec.explorationWeightC + depth * spec.explorationWeightA;
+    float rw = Util::RandInterval(0.0f, spec.randomWeight);
+    float w = eu + (eb * ebw) + rw;
+
+    if (result == nullptr || w > bestUtility) {
+      bestUtility = w;
+      result = cn;
+    }
+  }
+
+  return result;
 }

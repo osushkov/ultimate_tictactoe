@@ -1,31 +1,32 @@
 
 #include "MCTS.hpp"
-#include "Node.hpp"
 #include "../../util/Timer.hpp"
+#include "Node.hpp"
 
 static const unsigned MCTS_ITER_CHUNK = 50;
 
 using namespace fastbot;
 using namespace fastbot::mcts;
 
+static unsigned totalIters = 0;
+
 struct MCTS::MCTSImpl {
   unsigned timeoutMicroseconds;
-  bool useEGreedy;
+  Spec spec;
 
   uptr<Node> root;
 
-  MCTSImpl(unsigned timeoutMicroseconds, bool useEGreedy) :
-        timeoutMicroseconds(timeoutMicroseconds), useEGreedy(useEGreedy) {};
+  MCTSImpl(unsigned timeoutMicroseconds, const Spec &spec)
+      : timeoutMicroseconds(timeoutMicroseconds), spec(spec){};
 
   // TODO: handle the fact that the lifetime of an action returned here has to be less than or
   // equal to the lifetime of the MCTS.
   vector<ActionUtility> ComputeUtilities(const State &startState) {
-    root = make_unique<Node>(startState, 0);
+    root = make_unique<Node>(startState, 0, 0);
 
     Timer timer;
     timer.Start();
 
-    unsigned totalIters = 0;
     while (timer.GetElapsedMicroseconds() < timeoutMicroseconds) {
       for (unsigned i = 0; i < MCTS_ITER_CHUNK; i++) {
         mcIteration(root.get());
@@ -50,7 +51,7 @@ struct MCTS::MCTSImpl {
     Node *cur = root;
     while (!cur->IsLeaf()) {
       pathFromRoot.push_back(cur);
-      cur = cur->Select(useEGreedy);
+      cur = cur->Select(spec);
     }
     pathFromRoot.push_back(cur);
 
@@ -72,11 +73,8 @@ struct MCTS::MCTSImpl {
     unsigned curPlayerIndex = startNode->PlayerIndex();
     State curState = startNode->GetState();
 
-    vector<State> playedStates;
     while (!curState.IsTerminal()) {
       curState = randomSuccessor(curState);
-      playedStates.push_back(curState);
-
       curPlayerIndex = 1 - curPlayerIndex;
     }
 
@@ -95,15 +93,11 @@ struct MCTS::MCTSImpl {
   }
 
   State randomSuccessor(const State &state) {
-    vector<Action> actions = state.AvailableActions();
-    // We shouldnt be getting terminal states in this function.
-    assert(!actions.empty());
-
-    return state.SuccessorState(actions[rand() % actions.size()]);
+    return state.SuccessorState(state.ChooseRandomAction());
   }
 };
 
-MCTS::MCTS(unsigned iters, bool useEGreedy) : impl(new MCTSImpl(iters, useEGreedy)) {}
+MCTS::MCTS(unsigned iters, const Spec &spec) : impl(new MCTSImpl(iters, spec)) {}
 
 MCTS::~MCTS() = default;
 

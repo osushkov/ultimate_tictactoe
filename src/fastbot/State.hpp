@@ -16,12 +16,7 @@ constexpr unsigned NUM_TOP_CELLS = 9;
 enum class CellState : unsigned char { EMPTY = 0, NAUGHT = 1, CROSS = 2 };
 std::ostream &operator<<(std::ostream &stream, const CellState &cs);
 
-enum class TopCellState : unsigned char {
-  UNDECIDED = 0,
-  NAUGHT = 1,
-  CROSS = 2,
-  DRAW = 3
-};
+enum class TopCellState : unsigned char { UNDECIDED = 0, NAUGHT = 1, CROSS = 2, DRAW = 3 };
 std::ostream &operator<<(std::ostream &stream, const TopCellState &tcs);
 
 class State {
@@ -41,17 +36,15 @@ public:
 
   ~State() = default;
 
-  State& operator=(const State& other);
+  State &operator=(const State &other);
   bool operator==(const State &other) const;
-
-  // Returns a hash of this state.
-  size_t HashCode() const;
 
   // Print this state to the output stream.
   void Output(std::ostream &out) const;
 
   // Returns a list of all possible actions in this state.
   vector<Action> AvailableActions(void) const;
+  Action ChooseRandomAction(void) const;
 
   // Returns a successor state when the given action is applied in this state.
   // This function can be stochastic and return a different State every time it is called.
@@ -70,11 +63,5 @@ private:
   void flipState(void);
 
   void updateFlags(void);
-};
-}
-
-namespace std {
-template <> struct hash<fastbot::State *> {
-  inline size_t operator()(fastbot::State const *state) const { return state->HashCode(); }
 };
 }

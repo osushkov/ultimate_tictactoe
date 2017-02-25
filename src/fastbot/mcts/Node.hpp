@@ -3,6 +3,7 @@
 
 #include "../../util/Common.hpp"
 #include "../Action.hpp"
+#include "../Spec.hpp"
 #include "../State.hpp"
 
 namespace fastbot {
@@ -13,7 +14,7 @@ class Node {
 public:
   using Edge = pair<Action, uptr<Node>>;
 
-  Node(const State &state, unsigned char playerIndex);
+  Node(const State &state, unsigned char playerIndex, unsigned depth);
   virtual ~Node() = default;
 
   bool IsLeaf(void) const;
@@ -27,8 +28,7 @@ public:
   Node *Expand(void); // Can only be done on a 'leaf'
 
   // TODO: should add a policy object as input that will choose which edge to select.
-  // For now it's simply e-greedy.
-  Node *Select(bool useEGreedy); // Should only be done on non-leaves.
+  Node *Select(const Spec &spec); // Should only be done on non-leaves.
 
   void AddUtility(float utility);
 
@@ -44,13 +44,14 @@ private:
   // since this is an adversarial game, it is not always "my" turn, where "me" is defined
   // as the player at the root of the tree.
   unsigned char playerIndex; // index 0 is "me", index 1 is opponent.
+  unsigned depth;
   bool isLeaf;
 
   unsigned totalTrials;
   float sumUtility;
 
-  Node* eGreedySelect(void);
-  Node* UCB1Select(void);
+  Node *eGreedySelect(void);
+  Node *UCB1Select(const Spec &spec);
 };
 }
 }

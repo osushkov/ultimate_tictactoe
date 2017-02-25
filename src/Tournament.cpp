@@ -13,8 +13,9 @@ static naivebot::State convert(const fastbot::State &otherState, unsigned char n
       break;
     case fastbot::CellState::NAUGHT:
     case fastbot::CellState::CROSS:
-      fieldCells[i] = naivebotId == static_cast<unsigned char>(ofs) ?
-            naivebot::CellState::MY_TOKEN : naivebot::CellState::OPPONENT_TOKEN;
+      fieldCells[i] = naivebotId == static_cast<unsigned char>(ofs)
+                          ? naivebot::CellState::MY_TOKEN
+                          : naivebot::CellState::OPPONENT_TOKEN;
       break;
     }
   }
@@ -46,7 +47,7 @@ struct Tournament::TournamentImpl {
   TournamentImpl() = default;
   ~TournamentImpl() = default;
 
-  vector<float> RunTournament(const vector<function<uptr<naivebot::NaiveBot>()>> &botBuilders,
+  vector<float> RunTournament(const vector<function<uptr<fastbot::FastBot>()>> &botBuilders,
                               unsigned rounds) {
 
     vector<unsigned> wins(botBuilders.size(), 0);
@@ -63,7 +64,7 @@ struct Tournament::TournamentImpl {
       auto bot2 = botBuilders[p2]();
       bot2->SetBotId(2);
 
-      int pr = playoutNaive(bot1.get(), bot2.get());
+      int pr = playoutFast(bot1.get(), bot2.get());
       played[p1]++;
       played[p2]++;
 
@@ -108,8 +109,8 @@ struct Tournament::TournamentImpl {
     });
   }
 
-  int playoutNaive(naivebot::NaiveBot* bot1, naivebot::NaiveBot* bot2) {
-    naivebot::State curState;
+  int playoutFast(fastbot::FastBot *bot1, fastbot::FastBot *bot2) {
+    fastbot::State curState(bot1->GetBotId());
     int curPlayer = 0;
 
     while (!curState.IsTerminal()) {
@@ -127,7 +128,7 @@ struct Tournament::TournamentImpl {
     }
   }
 
-  int playoutNaiveFast(naivebot::NaiveBot* bot1, fastbot::FastBot* bot2) {
+  int playoutNaiveFast(naivebot::NaiveBot *bot1, fastbot::FastBot *bot2) {
     naivebot::State curState;
     int curPlayer = rand() % 2;
 
@@ -154,11 +155,12 @@ struct Tournament::TournamentImpl {
   }
 };
 
-Tournament::Tournament() : impl(new TournamentImpl()) {};
+Tournament::Tournament() : impl(new TournamentImpl()){};
 Tournament::~Tournament() = default;
 
-vector<float> Tournament::RunTournament(const vector<function<uptr<naivebot::NaiveBot>()>> &botBuilders,
-                                        unsigned rounds) {
+vector<float>
+Tournament::RunTournament(const vector<function<uptr<fastbot::FastBot>()>> &botBuilders,
+                          unsigned rounds) {
   return impl->RunTournament(botBuilders, rounds);
 }
 
