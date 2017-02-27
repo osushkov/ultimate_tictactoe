@@ -78,7 +78,7 @@ static void runNaiveVsFastTournament(void) {
     return make_unique<naivebot::NaiveBot>(100000, false);
   };
   function<uptr<fastbot::FastBot>()> bot2 = []() {
-    return make_unique<fastbot::FastBot>(100000, fastbot::Spec(0.636279f, 0.18074f, 0.593264f, 0.0901903f));
+    return make_unique<fastbot::FastBot>(100000, fastbot::Spec(1.72411f, 0.705157f, 0.167403f, 0.17345f));
   };
 
   Tournament tournament;
