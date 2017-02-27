@@ -1,5 +1,6 @@
 CC = g++
 
+CCFLAGS += -pthread
 CCFLAGS += -std=c++11
 CCFLAGS += -I/usr/local/include
 CCFLAGS += -Wall
@@ -14,4 +15,5 @@ ifdef DEBUG
 endif
 
 CLFLAGS += -L/usr/local/lib
-CLFLAGS += -lpthread
+CLFLAGS += -pthread
+CLFLAGS += -std=c++11

@@ -2,6 +2,11 @@
 #include "Tournament.hpp"
 #include "util/Common.hpp"
 
+#include <mutex>
+#include <thread>
+
+static constexpr unsigned NUM_THREADS = 20;
+
 static naivebot::State convert(const fastbot::State &otherState, unsigned char naivebotId) {
   array<naivebot::CellState, naivebot::NUM_CELLS> fieldCells;
   for (unsigned i = 0; i < naivebot::NUM_CELLS; i++) {
@@ -52,26 +57,38 @@ struct Tournament::TournamentImpl {
 
     vector<unsigned> wins(botBuilders.size(), 0);
     vector<unsigned> played(botBuilders.size(), 0);
+    mutex mtx;
 
-    for (unsigned i = 0; i < rounds; i++) {
-      cout << "round: " << i << endl;
-      unsigned p1 = rand() % botBuilders.size();
-      unsigned p2 = rand() % botBuilders.size();
+    vector<thread> threads;
+    for (unsigned i = 0; i < NUM_THREADS; i++) {
+        thread t([this, &botBuilders, rounds, &wins, &played, &mtx]{
+            for (unsigned i = 0; i < rounds / NUM_THREADS; i++) {
+                unsigned p1 = rand() % botBuilders.size();
+                unsigned p2 = rand() % botBuilders.size();
 
-      auto bot1 = botBuilders[p1]();
-      bot1->SetBotId(1);
+                auto bot1 = botBuilders[p1]();
+                bot1->SetBotId(1);
 
-      auto bot2 = botBuilders[p2]();
-      bot2->SetBotId(2);
+                auto bot2 = botBuilders[p2]();
+                bot2->SetBotId(2);
 
-      int pr = playoutFast(bot1.get(), bot2.get());
-      played[p1]++;
-      played[p2]++;
+                int pr = playoutFast(bot1.get(), bot2.get());
 
-      if (pr != 0) {
-        unsigned wi = pr == -1 ? p1 : p2;
-        wins[wi]++;
-      }
+                std::unique_lock<std::mutex> lock(mtx);
+                played[p1]++;
+                played[p2]++;
+
+                if (pr != 0) {
+                  unsigned wi = pr == -1 ? p1 : p2;
+                  wins[wi]++;
+                }
+            }
+        });
+        threads.push_back(move(t));
+    }
+
+    for (auto &t : threads) {
+        t.join();
     }
 
     return vmap<unsigned, float>(wins, [&played](unsigned numWins, unsigned i) {
