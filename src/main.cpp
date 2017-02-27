@@ -26,7 +26,7 @@ static fastbot::Spec randomSpec(void) {
 }
 
 static fastbot::Spec initialSpec(void) {
-  return fastbot::Spec(0.111982f, 0.0764125f, 0.231755f, 0.341879f);
+  return fastbot::Spec(0.636279f, 0.18074f, 0.593264f, 0.0901903f);
 }
 
 static pair<fastbot::Spec, float> runFastTournament(const fastbot::Spec &seedSpec, unsigned opponents, unsigned rounds) {
@@ -75,10 +75,10 @@ static fastbot::Spec betterSpec(const fastbot::Spec &specA, const fastbot::Spec 
 
 static void runNaiveVsFastTournament(void) {
   function<uptr<naivebot::NaiveBot>()> bot1 = []() {
-    return make_unique<naivebot::NaiveBot>(50000, false);
+    return make_unique<naivebot::NaiveBot>(100000, false);
   };
   function<uptr<fastbot::FastBot>()> bot2 = []() {
-    return make_unique<fastbot::FastBot>(50000, fastbot::Spec(0.1f, 0.1f, 0.3f, 0.2f));
+    return make_unique<fastbot::FastBot>(100000, fastbot::Spec(0.636279f, 0.18074f, 0.593264f, 0.0901903f));
   };
 
   Tournament tournament;
@@ -93,24 +93,24 @@ static void runNaiveVsFastTournament(void) {
 int main() {
   srand(1337);
 
-  // runNaiveVsFastTournament();
+  runNaiveVsFastTournament();
 
-  fastbot::Spec bestSpec = initialSpec();
+  // fastbot::Spec bestSpec = initialSpec();
+  //
+  // for (unsigned i = 0; i < 100; i++) {
+  //     auto r = runFastTournament(bestSpec, 4, 500);
+  //
+  //     if (r.first != bestSpec) {
+  //       bestSpec = betterSpec(bestSpec, r.first, 200);
+  //
+  //       cout << "best: " << r.second << endl;
+  //       cout << bestSpec.explorationWeightA << endl;
+  //       cout << bestSpec.explorationWeightC << endl;
+  //       cout << bestSpec.randomWeight << endl;
+  //       cout << bestSpec.pRandomSelect << endl << endl;
+  //   }
+  // }
 
-  for (unsigned i = 0; i < 100; i++) {
-      auto r = runFastTournament(bestSpec, 4, 500);
-
-      if (r.first != bestSpec) {
-        bestSpec = betterSpec(bestSpec, r.first, 200);
-
-        cout << "best: " << r.second << endl;
-        cout << bestSpec.explorationWeightA << endl;
-        cout << bestSpec.explorationWeightC << endl;
-        cout << bestSpec.randomWeight << endl;
-        cout << bestSpec.pRandomSelect << endl << endl;
-    }
-  }
-  // auto bot = make_unique<naivebot::NaiveBot>();
   //
   // BotIO botIO(std::move(bot));
   // botIO.Loop();

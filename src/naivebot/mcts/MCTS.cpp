@@ -33,7 +33,7 @@ struct MCTS::MCTSImpl {
       }
     }
 
-    cout << "naive iters: " << totalIters << endl;
+    // cout << "naive iters: " << totalIters << endl;
     timer.Stop();
 
     vector<ActionUtility> result = root->GetActionUtilities();
