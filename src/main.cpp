@@ -9,7 +9,7 @@
 
 using namespace std;
 
-static constexpr unsigned MICROSECONDS_PER_MOVE = 100000;
+static constexpr unsigned MICROSECONDS_PER_MOVE = 300000;
 
 static fastbot::Spec randomSpec(void) {
     float minExplorationWeightA = 0.0f, maxExplorationWeightA = 3.0f;
@@ -26,7 +26,7 @@ static fastbot::Spec randomSpec(void) {
 }
 
 static fastbot::Spec initialSpec(void) {
-  return fastbot::Spec(0.636279f, 0.18074f, 0.593264f, 0.0901903f);
+  return fastbot::Spec(0.546502f, 0.377958f, 0.14554f, 0.178079f);
 }
 
 static pair<fastbot::Spec, float> runFastTournament(const fastbot::Spec &seedSpec, unsigned opponents, unsigned rounds) {
@@ -75,10 +75,10 @@ static fastbot::Spec betterSpec(const fastbot::Spec &specA, const fastbot::Spec 
 
 static void runNaiveVsFastTournament(void) {
   function<uptr<naivebot::NaiveBot>()> bot1 = []() {
-    return make_unique<naivebot::NaiveBot>(100000, false);
+    return make_unique<naivebot::NaiveBot>(300000, false);
   };
   function<uptr<fastbot::FastBot>()> bot2 = []() {
-    return make_unique<fastbot::FastBot>(100000, fastbot::Spec(1.72411f, 0.705157f, 0.167403f, 0.17345f));
+    return make_unique<fastbot::FastBot>(300000, fastbot::Spec(0.546502f, 0.377958f, 0.14554f, 0.178079f));
   };
 
   Tournament tournament;
