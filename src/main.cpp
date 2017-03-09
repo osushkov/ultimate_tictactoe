@@ -2,6 +2,7 @@
 #include "BotIO.hpp"
 #include "Tournament.hpp"
 #include "util/Util.hpp"
+#include "fastbot/FastBot.hpp"
 #include "naivebot/NaiveBot.hpp"
 #include "fastbot/Spec.hpp"
 #include <cstdlib>
@@ -90,10 +91,20 @@ static void runNaiveVsFastTournament(void) {
   }
 }
 
+static void calculateOpeningMoves(void) {
+    unsigned msPerMove = 1000 * 1000 * 60 * 5;
+    uptr<fastbot::FastBot> bot =
+        make_unique<fastbot::FastBot>(msPerMove, fastbot::Spec(0.546502f, 0.377958f, 0.14554f, 0.178079f));
+
+    fastbot::Action a = bot->ChooseAction(fastbot::State(0));
+    cout << "best opening action: " << static_cast<int>(a) << endl;
+}
+
 int main() {
   srand(1337);
 
-  runNaiveVsFastTournament();
+  calculateOpeningMoves();
+  // runNaiveVsFastTournament();
 
   // fastbot::Spec bestSpec = initialSpec();
   //
