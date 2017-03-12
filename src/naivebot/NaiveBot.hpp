@@ -1,10 +1,10 @@
 
 #pragma once
 
+#include "../Bot.hpp"
+#include "../util/Common.hpp"
 #include "Action.hpp"
 #include "State.hpp"
-#include "../util/Common.hpp"
-#include "../Bot.hpp"
 
 namespace naivebot {
 
@@ -15,6 +15,8 @@ public:
 
   void SetBotId(unsigned char botId) override;
   unsigned char GetBotId(void) const override;
+
+  void SetTimeRemaining(unsigned milliseconds) override {}
 
   pair<int, int> ChooseAction(const string &field) override;
   Action ChooseAction(const State &state);

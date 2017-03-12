@@ -6,13 +6,18 @@
 
 using namespace fastbot;
 
+static constexpr unsigned MIN_MS_PER_MOVE = 100;
+static constexpr unsigned MAX_MS_PER_MOVE = 1000;
+static constexpr unsigned REMAINING_MS_USE_RATIO = 20;
+
 struct FastBot::FastBotImpl {
   unsigned char botId;
-  unsigned microsecondsPerMove;
+  unsigned millisecondsPerMove;
+  unsigned millisecondsRemaining;
   Spec spec;
 
-  FastBotImpl(unsigned microsecondsPerMove, const Spec &spec)
-      : botId(1), microsecondsPerMove(microsecondsPerMove), spec(spec){};
+  FastBotImpl(unsigned millisecondsPerMove, const Spec &spec)
+      : botId(1), millisecondsPerMove(millisecondsPerMove), millisecondsRemaining(0), spec(spec){};
 
   pair<int, int> ChooseAction(const string &field) {
     auto action = ChooseAction(parseState(field));
@@ -20,7 +25,15 @@ struct FastBot::FastBotImpl {
   }
 
   Action ChooseAction(const State &state) {
-    mcts::MCTS mcts(microsecondsPerMove, spec);
+    unsigned msPerMove = millisecondsPerMove;
+    if (millisecondsPerMove < millisecondsRemaining) {
+      msPerMove += (millisecondsRemaining - millisecondsPerMove) / REMAINING_MS_USE_RATIO;
+    }
+
+    msPerMove = max(msPerMove, MIN_MS_PER_MOVE);
+    msPerMove = min(msPerMove, MAX_MS_PER_MOVE);
+
+    mcts::MCTS mcts(msPerMove, spec);
     vector<mcts::ActionUtility> actions = mcts.ComputeUtilities(state);
     return actions.front().first;
   }
@@ -71,6 +84,10 @@ void FastBot::SetBotId(unsigned char botId) {
 }
 
 unsigned char FastBot::GetBotId(void) const { return impl->botId; }
+
+void FastBot::SetTimeRemaining(unsigned milliseconds) {
+  impl->millisecondsRemaining = milliseconds;
+}
 
 pair<int, int> FastBot::ChooseAction(const string &field) { return impl->ChooseAction(field); }
 

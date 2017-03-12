@@ -11,13 +11,13 @@ using namespace fastbot::mcts;
 static unsigned totalIters = 0;
 
 struct MCTS::MCTSImpl {
-  unsigned timeoutMicroseconds;
+  unsigned timeoutMilliseconds;
   Spec spec;
 
   uptr<Node> root;
 
-  MCTSImpl(unsigned timeoutMicroseconds, const Spec &spec)
-      : timeoutMicroseconds(timeoutMicroseconds), spec(spec){};
+  MCTSImpl(unsigned timeoutMilliseconds, const Spec &spec)
+      : timeoutMilliseconds(timeoutMilliseconds), spec(spec){};
 
   // TODO: handle the fact that the lifetime of an action returned here has to be less than or
   // equal to the lifetime of the MCTS.
@@ -27,6 +27,7 @@ struct MCTS::MCTSImpl {
     Timer timer;
     timer.Start();
 
+    const unsigned timeoutMicroseconds = (timeoutMilliseconds * 1000);
     while (timer.GetElapsedMicroseconds() < timeoutMicroseconds) {
       for (unsigned i = 0; i < MCTS_ITER_CHUNK; i++) {
         mcIteration(root.get());
@@ -97,7 +98,8 @@ struct MCTS::MCTSImpl {
   }
 };
 
-MCTS::MCTS(unsigned iters, const Spec &spec) : impl(new MCTSImpl(iters, spec)) {}
+MCTS::MCTS(unsigned timeoutMilliseconds, const Spec &spec)
+    : impl(new MCTSImpl(timeoutMilliseconds, spec)) {}
 
 MCTS::~MCTS() = default;
 

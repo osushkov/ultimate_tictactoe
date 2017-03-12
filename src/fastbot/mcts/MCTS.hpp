@@ -15,7 +15,7 @@ using ActionUtility = pair<Action, float>;
 // Monte-Carlo Tree Search.
 class MCTS {
 public:
-  MCTS(unsigned timeoutMicroseconds, const Spec &spec);
+  MCTS(unsigned timeoutMilliseconds, const Spec &spec);
   virtual ~MCTS();
 
   // Sorted list of action utilities.

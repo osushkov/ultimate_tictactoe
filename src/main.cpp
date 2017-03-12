@@ -1,45 +1,47 @@
 
 #include "BotIO.hpp"
 #include "Tournament.hpp"
-#include "util/Util.hpp"
 #include "fastbot/FastBot.hpp"
-#include "naivebot/NaiveBot.hpp"
 #include "fastbot/Spec.hpp"
+#include "naivebot/NaiveBot.hpp"
+#include "util/Util.hpp"
 #include <cstdlib>
 #include <iostream>
+#include <mutex>
+#include <thread>
 
 using namespace std;
 
 static constexpr unsigned MICROSECONDS_PER_MOVE = 300000;
 
 static fastbot::Spec randomSpec(void) {
-    float minExplorationWeightA = 0.0f, maxExplorationWeightA = 3.0f;
-    float minExplorationWeightC = 0.0f, maxExplorationWeightC = 3.0f;
-    float minRandomWeight = 0.0f, maxRandomWeight = 2.0f;
-    float minPRandomSelect = 0.0f, maxPRandomSelect = 1.0f;
+  float minExplorationWeightA = 0.0f, maxExplorationWeightA = 3.0f;
+  float minExplorationWeightC = 0.0f, maxExplorationWeightC = 3.0f;
+  float minRandomWeight = 0.0f, maxRandomWeight = 2.0f;
+  float minPRandomSelect = 0.0f, maxPRandomSelect = 1.0f;
 
-    return fastbot::Spec(
-        Util::RandInterval(minExplorationWeightA, maxExplorationWeightA),
-        Util::RandInterval(minExplorationWeightC, maxExplorationWeightC),
-        Util::RandInterval(minRandomWeight, maxRandomWeight),
-        Util::RandInterval(minPRandomSelect, maxPRandomSelect)
-    );
+  return fastbot::Spec(Util::RandInterval(minExplorationWeightA, maxExplorationWeightA),
+                       Util::RandInterval(minExplorationWeightC, maxExplorationWeightC),
+                       Util::RandInterval(minRandomWeight, maxRandomWeight),
+                       Util::RandInterval(minPRandomSelect, maxPRandomSelect));
 }
 
 static fastbot::Spec initialSpec(void) {
   return fastbot::Spec(0.546502f, 0.377958f, 0.14554f, 0.178079f);
 }
 
-static pair<fastbot::Spec, float> runFastTournament(const fastbot::Spec &seedSpec, unsigned opponents, unsigned rounds) {
+static pair<fastbot::Spec, float> runFastTournament(const fastbot::Spec &seedSpec,
+                                                    unsigned opponents, unsigned rounds) {
   vector<fastbot::Spec> botSpecs;
   botSpecs.push_back(seedSpec);
   for (unsigned i = 0; i < opponents; i++) {
-      botSpecs.push_back(randomSpec());
+    botSpecs.push_back(randomSpec());
   }
 
   vector<function<uptr<fastbot::FastBot>()>> bots;
   for (const auto &spec : botSpecs) {
-    bots.push_back([&spec]() { return make_unique<fastbot::FastBot>(MICROSECONDS_PER_MOVE, spec); });
+    bots.push_back(
+        [&spec]() { return make_unique<fastbot::FastBot>(MICROSECONDS_PER_MOVE, spec); });
   }
 
   Tournament tournament;
@@ -50,22 +52,24 @@ static pair<fastbot::Spec, float> runFastTournament(const fastbot::Spec &seedSpe
 
   for (unsigned i = 0; i < pWin.size(); i++) {
     if (pWin[i] >= bestPWin) {
-        bestPWin = pWin[i];
-        bestSpec = botSpecs[i];
+      bestPWin = pWin[i];
+      bestSpec = botSpecs[i];
     }
   }
 
   return make_pair(bestSpec, bestPWin);
 }
 
-static fastbot::Spec betterSpec(const fastbot::Spec &specA, const fastbot::Spec &specB, unsigned rounds) {
+static fastbot::Spec betterSpec(const fastbot::Spec &specA, const fastbot::Spec &specB,
+                                unsigned rounds) {
   vector<fastbot::Spec> botSpecs;
   botSpecs.push_back(specA);
   botSpecs.push_back(specB);
 
   vector<function<uptr<fastbot::FastBot>()>> bots;
   for (const auto &spec : botSpecs) {
-    bots.push_back([&spec]() { return make_unique<fastbot::FastBot>(MICROSECONDS_PER_MOVE, spec); });
+    bots.push_back(
+        [&spec]() { return make_unique<fastbot::FastBot>(MICROSECONDS_PER_MOVE, spec); });
   }
 
   Tournament tournament;
@@ -79,7 +83,8 @@ static void runNaiveVsFastTournament(void) {
     return make_unique<naivebot::NaiveBot>(300000, false);
   };
   function<uptr<fastbot::FastBot>()> bot2 = []() {
-    return make_unique<fastbot::FastBot>(300000, fastbot::Spec(0.546502f, 0.377958f, 0.14554f, 0.178079f));
+    return make_unique<fastbot::FastBot>(300000,
+                                         fastbot::Spec(0.546502f, 0.377958f, 0.14554f, 0.178079f));
   };
 
   Tournament tournament;
@@ -92,15 +97,62 @@ static void runNaiveVsFastTournament(void) {
 }
 
 static void calculateOpeningMoves(void) {
-    unsigned msPerMove = 1000 * 1000 * 60 * 5;
-    uptr<fastbot::FastBot> bot =
-        make_unique<fastbot::FastBot>(msPerMove, fastbot::Spec(0.546502f, 0.377958f, 0.14554f, 0.178079f));
+  vector<pair<unsigned char, unsigned char>> madeMoves;
+  for (unsigned char i = 0; i < 81; i++) {
+    for (unsigned char j = 0; j < 81; j++) {
+      madeMoves.emplace_back(i, j);
+    }
+  }
 
-    fastbot::Action a = bot->ChooseAction(fastbot::State(0));
-    cout << "best opening action: " << static_cast<int>(a) << endl;
+  vector<fastbot::Action> bestMove(madeMoves.size(), 99);
+  vector<thread> threads;
+
+  const unsigned NUM_THREADS = 6;
+  for (unsigned ti = 0; ti < NUM_THREADS; ti++) {
+    thread t([ti, &madeMoves, &bestMove] {
+      const unsigned msPerMove = 1000 * 1000 * 30;
+      uptr<fastbot::FastBot> bot = make_unique<fastbot::FastBot>(
+          msPerMove, fastbot::Spec(0.546502f, 0.377958f, 0.14554f, 0.178079f));
+      bot->SetBotId(2);
+
+      unsigned si = (ti * madeMoves.size()) / NUM_THREADS;
+      unsigned ei = ((ti + 1) * madeMoves.size()) / NUM_THREADS;
+      for (unsigned i = si; i < ei; i++) {
+        if (madeMoves[i].first == madeMoves[i].second) {
+          continue;
+        }
+
+        fastbot::State state(1);
+        state = state.SuccessorState(fastbot::Action(madeMoves[i].first));
+
+        fastbot::Action myAction(madeMoves[i].first == 40 ? 10 : 40);
+        if (myAction == madeMoves[i].second) {
+          continue;
+        }
+
+        state = state.SuccessorState(myAction);
+        state = state.SuccessorState(fastbot::Action(madeMoves[i].second));
+
+        bestMove[i] = bot->ChooseAction(state);
+      }
+    });
+
+    threads.push_back(move(t));
+  }
+
+  for (auto &t : threads) {
+    t.join();
+  }
+
+  for (unsigned i = 0; i < madeMoves.size(); i++) {
+    cout << "{{" << static_cast<int>(madeMoves[i].first) << ","
+         << static_cast<int>(madeMoves[i].second) << "}," << static_cast<int>(bestMove[i]) << "}"
+         << endl;
+  }
 }
 
 int main() {
+  // srand(time(NULL));
   srand(1337);
 
   calculateOpeningMoves();
