@@ -1,19 +1,19 @@
 
 #include "BotIO.hpp"
 
-#include <cstdlib>
-#include <string>
-#include <vector>
-#include <utility>
-#include <iostream>
 #include <algorithm>
+#include <cstdlib>
+#include <iostream>
 #include <sstream>
+#include <string>
 #include <time.h>
+#include <utility>
+#include <vector>
 
 using namespace std;
 
-static std::vector<std::string> &split(
-    const std::string &s, char delim, std::vector<std::string> &elems) {
+static std::vector<std::string> &split(const std::string &s, char delim,
+                                       std::vector<std::string> &elems) {
   std::stringstream ss(s);
   std::string item;
   elems.clear();
@@ -30,13 +30,9 @@ static int stringToInt(const std::string &s) {
   return result;
 }
 
-static void debug(const std::string &s) {
-  std::cerr << s << std::endl << std::flush;
-}
+static void debug(const std::string &s) { std::cerr << s << std::endl << std::flush; }
 
-BotIO::BotIO(uptr<Bot> bot) : bot(std::move(bot)) {
-  command.reserve(256);
-}
+BotIO::BotIO(uptr<Bot> bot) : bot(std::move(bot)) { command.reserve(256); }
 
 void BotIO::Loop() {
   while (std::getline(std::cin, line)) {
@@ -81,6 +77,9 @@ void BotIO::update(const std::string &player, const std::string &type, const std
 void BotIO::setting(const std::string &type, const std::string &value) {
   if (type == "timebank") {
     _timebank = stringToInt(value);
+    if (_timebank >= 0) {
+      bot->SetTimeRemaining(static_cast<unsigned>(_timebank));
+    }
   } else if (type == "time_per_move") {
     _timePerMove = stringToInt(value);
   } else if (type == "player_names") {
