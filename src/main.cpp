@@ -76,89 +76,56 @@ static fastbot::Spec betterSpec(const fastbot::Spec &specA, const fastbot::Spec 
   return pWin[0] > pWin[1] ? specA : specB;
 }
 
+static const vector<pair<unsigned char, unsigned char>> moves1 = {
+    {0, 20},  {1, 22},  {2, 8},   {3, 0},   {4, 3},   {5, 24},  {6, 18},  {7, 21},  {8, 24},
+    {9, 47},  {10, 40}, {11, 44}, {12, 38}, {13, 40}, {14, 34}, {15, 28}, {16, 40}, {17, 44},
+    {18, 55}, {19, 77}, {20, 70}, {21, 72}, {22, 59}, {23, 80}, {24, 72}, {25, 75}, {26, 80},
+    {27, 2},  {28, 12}, {29, 24}, {30, 10}, {31, 23}, {32, 24}, {33, 0},  {34, 12}, {35, 8},
+    {36, 27}, {37, 40}, {38, 44}, {39, 46}, {40, 30}, {41, 44}, {42, 36}, {43, 48}, {44, 34},
+    {45, 56}, {46, 77}, {47, 78}, {48, 56}, {49, 68}, {50, 78}, {51, 56}, {52, 68}, {53, 60},
+    {54, 1},  {55, 14}, {56, 25}, {57, 9},  {58, 14}, {59, 24}, {60, 10}, {61, 22}, {62, 8},
+    {63, 46}, {64, 40}, {65, 44}, {66, 28}, {67, 32}, {68, 51}, {69, 36}, {70, 40}, {71, 33},
+    {72, 64}, {73, 59}, {74, 61}, {75, 74}, {76, 58}, {77, 60}, {78, 63}, {79, 68}, {80, 60}};
+
 static void calculateOpeningMoves(void) {
-  vector<unsigned char> madeMoves;
+  vector<unsigned char> firstMove;
   for (unsigned char i = 0; i < 81; i++) {
-    if (i == 40) {
-      continue;
-    }
-
-    if (((i / 9) / 3) == 1 && ((i % 9) / 3) == 1) {
-      madeMoves.emplace_back(i);
-    }
+    firstMove.emplace_back(i);
   }
 
-  vector<fastbot::Action> bestMove(madeMoves.size(), 99);
+  vector<pair<pair<unsigned char, unsigned char>, unsigned char>> bestMove;
   vector<thread> threads;
+  mutex mtx;
 
-  const unsigned NUM_THREADS = 20;
+  const unsigned NUM_THREADS = 4;
   for (unsigned ti = 0; ti < NUM_THREADS; ti++) {
-    thread t([ti, &madeMoves, &bestMove] {
-      const unsigned msPerMove = 1000 * 30;
-      uptr<fastbot::FastBot> bot = make_unique<fastbot::FastBot>(
-          msPerMove, fastbot::Spec(0.546502f, 0.377958f, 0.14554f, 0.178079f));
-      bot->SetBotId(1);
-
-      unsigned si = (ti * madeMoves.size()) / NUM_THREADS;
-      unsigned ei = ((ti + 1) * madeMoves.size()) / NUM_THREADS;
-      for (unsigned i = si; i < ei; i++) {
-        fastbot::State state(1);
-        state = state.SuccessorState(fastbot::Action(40));
-        state = state.SuccessorState(fastbot::Action(madeMoves[i]));
-        bestMove[i] = bot->ChooseAction(state);
-      }
-    });
-
-    threads.push_back(move(t));
-  }
-
-  for (auto &t : threads) {
-    t.join();
-  }
-
-  for (unsigned i = 0; i < madeMoves.size(); i++) {
-    cout << "{" << static_cast<int>(madeMoves[i]) << "," << static_cast<int>(bestMove[i]) << "},";
-  }
-  cout << endl;
-
-  /*
-  vector<pair<unsigned char, unsigned char>> madeMoves;
-  for (unsigned char i = 0; i < 81; i++) {
-    for (unsigned char j = 0; j < 81; j++) {
-      madeMoves.emplace_back(i, j);
-    }
-  }
-
-  vector<fastbot::Action> bestMove(madeMoves.size(), 99);
-  vector<thread> threads;
-
-  const unsigned NUM_THREADS = 20;
-  for (unsigned ti = 0; ti < NUM_THREADS; ti++) {
-    thread t([ti, &madeMoves, &bestMove] {
+    thread t([ti, &firstMove, &bestMove, &mtx] {
       const unsigned msPerMove = 1000 * 30;
       uptr<fastbot::FastBot> bot = make_unique<fastbot::FastBot>(
           msPerMove, fastbot::Spec(0.546502f, 0.377958f, 0.14554f, 0.178079f));
       bot->SetBotId(2);
 
-      unsigned si = (ti * madeMoves.size()) / NUM_THREADS;
-      unsigned ei = ((ti + 1) * madeMoves.size()) / NUM_THREADS;
+      unsigned si = (ti * firstMove.size()) / NUM_THREADS;
+      unsigned ei = ((ti + 1) * firstMove.size()) / NUM_THREADS;
       for (unsigned i = si; i < ei; i++) {
-        if (madeMoves[i].first == madeMoves[i].second) {
-          continue;
-        }
-
         fastbot::State state(1);
-        state = state.SuccessorState(fastbot::Action(madeMoves[i].first));
+        state = state.SuccessorState(fastbot::Action(firstMove[i]));
 
-        fastbot::Action myAction(madeMoves[i].first == 40 ? 10 : 40);
-        if (myAction == madeMoves[i].second) {
-          continue;
+        for (const auto &rm : moves1) {
+          if (rm.first == firstMove[i]) {
+            state = state.SuccessorState(fastbot::Action(rm.second));
+            break;
+          }
         }
 
-        state = state.SuccessorState(myAction);
-        state = state.SuccessorState(fastbot::Action(madeMoves[i].second));
+        auto availableActions = state.AvailableActions();
+        for (auto action : availableActions) {
+          fastbot::State sampleState = state.SuccessorState(action);
+          auto myAction = bot->ChooseAction(sampleState);
 
-        bestMove[i] = bot->ChooseAction(state);
+          std::unique_lock<std::mutex> lock(mtx);
+          bestMove.emplace_back(make_pair(firstMove[i], action), myAction);
+        }
       }
     });
 
@@ -169,12 +136,11 @@ static void calculateOpeningMoves(void) {
     t.join();
   }
 
-  for (unsigned i = 0; i < madeMoves.size(); i++) {
-    cout << "{{" << static_cast<int>(madeMoves[i].first) << ","
-         << static_cast<int>(madeMoves[i].second) << "}," << static_cast<int>(bestMove[i]) << "}"
+  for (const auto &entry : bestMove) {
+    cout << "{{" << static_cast<int>(entry.first.first) << ","
+         << static_cast<int>(entry.first.second) << "}," << static_cast<int>(entry.second) << "}"
          << endl;
   }
-  */
 }
 
 int main() {
