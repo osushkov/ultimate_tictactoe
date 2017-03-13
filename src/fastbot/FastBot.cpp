@@ -6,7 +6,7 @@
 
 using namespace fastbot;
 
-static constexpr unsigned MIN_MS_PER_MOVE = 100;
+static constexpr unsigned MIN_MS_PER_MOVE = 10;
 static constexpr unsigned MAX_MS_PER_MOVE = 1000;
 static constexpr unsigned REMAINING_MS_USE_RATIO = 20;
 
@@ -51,7 +51,8 @@ struct FastBot::FastBotImpl {
       fieldCells[i] = v == 0 ? CellState::EMPTY : static_cast<CellState>(v);
     }
 
-    return State(fieldCells, botId);
+    // TODO: fixme.
+    return State(fieldCells, botId, -1);
   }
 
   std::vector<std::string> &split(const std::string &s, char delim,

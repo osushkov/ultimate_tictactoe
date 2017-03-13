@@ -23,6 +23,7 @@ class State {
   array<CellState, NUM_CELLS> cells;
   array<TopCellState, NUM_TOP_CELLS> topCells;
 
+  signed char topCellRestriction;
   unsigned char mySymbol; // 1 = NAUGHT, 2 = CROSS
 
   bool isTerminal;
@@ -31,13 +32,14 @@ class State {
 
 public:
   State(unsigned char mySymbol);
-  State(const array<CellState, NUM_CELLS> &fieldCells, unsigned char mySymbol);
+  State(const array<CellState, NUM_CELLS> &fieldCells, signed char topCellRestriction,
+        unsigned char mySymbol);
   State(const State &other);
 
   ~State() = default;
 
   State &operator=(const State &other);
-  bool operator==(const State &other) const;
+  bool operator==(const State &other) const = delete;
 
   // Print this state to the output stream.
   void Output(std::ostream &out) const;
@@ -58,6 +60,10 @@ public:
   bool IsLoss(void) const;
 
 private:
+  void addAvailableActions(unsigned topX, unsigned topY, vector<Action> &out) const;
+  void addAvailableActions(unsigned topX, unsigned topY, array<Action, NUM_CELLS> &out,
+                           unsigned &index) const;
+
   // Whenever we make a move and want another agent to make a move, then we should "flip" the
   // board such that what are currently "our" tokens become "oppponent" tokens, and vice versa.
   void flipState(void);

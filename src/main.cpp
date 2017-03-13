@@ -3,7 +3,6 @@
 #include "Tournament.hpp"
 #include "fastbot/FastBot.hpp"
 #include "fastbot/Spec.hpp"
-#include "naivebot/NaiveBot.hpp"
 #include "util/Util.hpp"
 #include <cstdlib>
 #include <iostream>
@@ -12,7 +11,7 @@
 
 using namespace std;
 
-static constexpr unsigned MICROSECONDS_PER_MOVE = 300000;
+static constexpr unsigned MS_PER_MOVE = 3;
 
 static fastbot::Spec randomSpec(void) {
   float minExplorationWeightA = 0.0f, maxExplorationWeightA = 3.0f;
@@ -40,8 +39,7 @@ static pair<fastbot::Spec, float> runFastTournament(const fastbot::Spec &seedSpe
 
   vector<function<uptr<fastbot::FastBot>()>> bots;
   for (const auto &spec : botSpecs) {
-    bots.push_back(
-        [&spec]() { return make_unique<fastbot::FastBot>(MICROSECONDS_PER_MOVE, spec); });
+    bots.push_back([&spec]() { return make_unique<fastbot::FastBot>(MS_PER_MOVE, spec); });
   }
 
   Tournament tournament;
@@ -68,32 +66,13 @@ static fastbot::Spec betterSpec(const fastbot::Spec &specA, const fastbot::Spec 
 
   vector<function<uptr<fastbot::FastBot>()>> bots;
   for (const auto &spec : botSpecs) {
-    bots.push_back(
-        [&spec]() { return make_unique<fastbot::FastBot>(MICROSECONDS_PER_MOVE, spec); });
+    bots.push_back([&spec]() { return make_unique<fastbot::FastBot>(MS_PER_MOVE, spec); });
   }
 
   Tournament tournament;
   vector<float> pWin = tournament.RunTournament(bots, rounds);
 
   return pWin[0] > pWin[1] ? specA : specB;
-}
-
-static void runNaiveVsFastTournament(void) {
-  function<uptr<naivebot::NaiveBot>()> bot1 = []() {
-    return make_unique<naivebot::NaiveBot>(300000, false);
-  };
-  function<uptr<fastbot::FastBot>()> bot2 = []() {
-    return make_unique<fastbot::FastBot>(300000,
-                                         fastbot::Spec(0.546502f, 0.377958f, 0.14554f, 0.178079f));
-  };
-
-  Tournament tournament;
-  vector<float> pWin = tournament.RunTournament(bot1, bot2, 100);
-
-  cout << "pwin:" << endl;
-  for (unsigned i = 0; i < pWin.size(); i++) {
-    cout << i << " : " << pWin[i] << endl;
-  }
 }
 
 static void calculateOpeningMoves(void) {
@@ -107,10 +86,10 @@ static void calculateOpeningMoves(void) {
   vector<fastbot::Action> bestMove(madeMoves.size(), 99);
   vector<thread> threads;
 
-  const unsigned NUM_THREADS = 6;
+  const unsigned NUM_THREADS = 20;
   for (unsigned ti = 0; ti < NUM_THREADS; ti++) {
     thread t([ti, &madeMoves, &bestMove] {
-      const unsigned msPerMove = 1000 * 1000 * 30;
+      const unsigned msPerMove = 1000 * 30;
       uptr<fastbot::FastBot> bot = make_unique<fastbot::FastBot>(
           msPerMove, fastbot::Spec(0.546502f, 0.377958f, 0.14554f, 0.178079f));
       bot->SetBotId(2);
@@ -155,24 +134,25 @@ int main() {
   // srand(time(NULL));
   srand(1337);
 
-  calculateOpeningMoves();
+  // calculateOpeningMoves();
   // runNaiveVsFastTournament();
 
-  // fastbot::Spec bestSpec = initialSpec();
-  //
-  // for (unsigned i = 0; i < 100; i++) {
-  //     auto r = runFastTournament(bestSpec, 4, 500);
-  //
-  //     if (r.first != bestSpec) {
-  //       bestSpec = betterSpec(bestSpec, r.first, 200);
-  //
-  //       cout << "best: " << r.second << endl;
-  //       cout << bestSpec.explorationWeightA << endl;
-  //       cout << bestSpec.explorationWeightC << endl;
-  //       cout << bestSpec.randomWeight << endl;
-  //       cout << bestSpec.pRandomSelect << endl << endl;
-  //   }
-  // }
+  fastbot::Spec bestSpec = initialSpec();
+
+  for (unsigned i = 0; i < 100; i++) {
+    cout << "i: " << i << endl;
+    auto r = runFastTournament(bestSpec, 4, 500);
+
+    if (r.first != bestSpec) {
+      bestSpec = betterSpec(bestSpec, r.first, 200);
+
+      cout << "best: " << r.second << endl;
+      cout << bestSpec.explorationWeightA << endl;
+      cout << bestSpec.explorationWeightC << endl;
+      cout << bestSpec.randomWeight << endl;
+      cout << bestSpec.pRandomSelect << endl << endl;
+    }
+  }
 
   //
   // BotIO botIO(std::move(bot));

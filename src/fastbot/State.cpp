@@ -140,13 +140,15 @@ static TopCellState calculateGridState(const array<TopCellState, NUM_TOP_CELLS> 
 }
 
 State::State(unsigned char mySymbol)
-    : mySymbol(mySymbol), isTerminal(false), isWin(false), isLoss(false) {
+    : topCellRestriction(-1), mySymbol(mySymbol), isTerminal(false), isWin(false), isLoss(false) {
   cells.fill(CellState::EMPTY);
   topCells.fill(TopCellState::UNDECIDED);
 }
 
-State::State(const array<CellState, NUM_CELLS> &fieldCells, unsigned char mySymbol)
-    : cells(fieldCells), mySymbol(mySymbol), isTerminal(false), isWin(false), isLoss(false) {
+State::State(const array<CellState, NUM_CELLS> &fieldCells, signed char topCellRestriction,
+             unsigned char mySymbol)
+    : cells(fieldCells), topCellRestriction(topCellRestriction), mySymbol(mySymbol),
+      isTerminal(false), isWin(false), isLoss(false) {
 
   unsigned i = 0;
   for (unsigned ty = 0; ty < 3; ty++) {
@@ -159,12 +161,14 @@ State::State(const array<CellState, NUM_CELLS> &fieldCells, unsigned char mySymb
 }
 
 State::State(const State &other)
-    : cells(other.cells), topCells(other.topCells), mySymbol(other.mySymbol),
-      isTerminal(other.isTerminal), isWin(other.isWin), isLoss(other.isLoss) {}
+    : cells(other.cells), topCells(other.topCells), topCellRestriction(other.topCellRestriction),
+      mySymbol(other.mySymbol), isTerminal(other.isTerminal), isWin(other.isWin),
+      isLoss(other.isLoss) {}
 
 State &State::operator=(const State &other) {
   cells = other.cells;
   topCells = other.topCells;
+  topCellRestriction = other.topCellRestriction;
   mySymbol = other.mySymbol;
   isTerminal = other.isTerminal;
   isWin = other.isWin;
@@ -172,21 +176,21 @@ State &State::operator=(const State &other) {
   return *this;
 }
 
-bool State::operator==(const State &other) const {
-  assert(cells.size() == other.cells.size());
-
-  if (mySymbol != other.mySymbol) {
-    return false;
-  }
-
-  for (unsigned i = 0; i < cells.size(); i++) {
-    if (cells[i] != other.cells[i]) {
-      return false;
-    }
-  }
-
-  return true;
-}
+// bool State::operator==(const State &other) const {
+//   assert(cells.size() == other.cells.size());
+//
+//   if (mySymbol != other.mySymbol || topCellRestriction != other.topCellRestriction) {
+//     return false;
+//   }
+//
+//   for (unsigned i = 0; i < cells.size(); i++) {
+//     if (cells[i] != other.cells[i]) {
+//       return false;
+//     }
+//   }
+//
+//   return true;
+// }
 
 void State::Output(std::ostream &out) const {
   out << "top level:" << endl;
@@ -218,21 +222,13 @@ vector<Action> State::AvailableActions(void) const {
     return result;
   }
 
-  for (unsigned ty = 0; ty < 3; ty++) {
-    for (unsigned tx = 0; tx < 3; tx++) {
-      if (topCells[tx + ty * 3] == TopCellState::UNDECIDED) {
-        unsigned sy = ty * 3;
-        unsigned ey = sy + 3;
-        unsigned sx = tx * 3;
-        unsigned ex = sx + 3;
-
-        for (unsigned y = sy; y < ey; y++) {
-          for (unsigned x = sx; x < ex; x++) {
-            unsigned char p = x + y * 9;
-            if (cells[p] == CellState::EMPTY) {
-              result.emplace_back(p);
-            }
-          }
+  if (topCellRestriction >= 0) {
+    addAvailableActions(topCellRestriction % 3, topCellRestriction / 3, result);
+  } else {
+    for (unsigned ty = 0; ty < 3; ty++) {
+      for (unsigned tx = 0; tx < 3; tx++) {
+        if (topCells[tx + ty * 3] == TopCellState::UNDECIDED) {
+          addAvailableActions(tx, ty, result);
         }
       }
     }
@@ -247,21 +243,14 @@ Action State::ChooseRandomAction(void) const {
   array<Action, NUM_CELLS> availableActions;
   unsigned numAvailable = 0;
 
-  for (unsigned ty = 0; ty < 3; ty++) {
-    for (unsigned tx = 0; tx < 3; tx++) {
-      if (topCells[tx + ty * 3] == TopCellState::UNDECIDED) {
-        unsigned sy = ty * 3;
-        unsigned ey = sy + 3;
-        unsigned sx = tx * 3;
-        unsigned ex = sx + 3;
-
-        for (unsigned y = sy; y < ey; y++) {
-          for (unsigned x = sx; x < ex; x++) {
-            unsigned char p = x + y * 9;
-            if (cells[p] == CellState::EMPTY) {
-              availableActions[numAvailable++] = p;
-            }
-          }
+  if (topCellRestriction >= 0) {
+    addAvailableActions(topCellRestriction % 3, topCellRestriction / 3, availableActions,
+                        numAvailable);
+  } else {
+    for (unsigned ty = 0; ty < 3; ty++) {
+      for (unsigned tx = 0; tx < 3; tx++) {
+        if (topCells[tx + ty * 3] == TopCellState::UNDECIDED) {
+          addAvailableActions(tx, ty, availableActions, numAvailable);
         }
       }
     }
@@ -288,6 +277,14 @@ State State::SuccessorState(Action action) const {
     result.updateFlags();
   }
 
+  unsigned offX = (action % 9) - (topX * 3);
+  unsigned offY = (action / 9) - (topY * 3);
+  if (result.topCells[offX + offY * 3] == TopCellState::UNDECIDED) {
+    result.topCellRestriction = static_cast<signed char>(offX + offY * 3);
+  } else {
+    result.topCellRestriction = static_cast<signed char>(-1);
+  }
+
   result.flipState();
   return result;
 }
@@ -299,6 +296,43 @@ unsigned char State::GetMySymbol(void) const { return mySymbol; }
 bool State::IsTerminal(void) const { return isTerminal; }
 bool State::IsWin(void) const { return isWin; }
 bool State::IsLoss(void) const { return isLoss; }
+
+void State::addAvailableActions(unsigned topX, unsigned topY, vector<Action> &out) const {
+  assert(topCells[topX + topY * 3] == TopCellState::UNDECIDED);
+
+  unsigned sy = topY * 3;
+  unsigned ey = sy + 3;
+  unsigned sx = topX * 3;
+  unsigned ex = sx + 3;
+
+  for (unsigned y = sy; y < ey; y++) {
+    for (unsigned x = sx; x < ex; x++) {
+      unsigned char p = x + y * 9;
+      if (cells[p] == CellState::EMPTY) {
+        out.emplace_back(p);
+      }
+    }
+  }
+}
+
+void State::addAvailableActions(unsigned topX, unsigned topY, array<Action, NUM_CELLS> &out,
+                                unsigned &index) const {
+  assert(topCells[topX + topY * 3] == TopCellState::UNDECIDED);
+
+  unsigned sy = topY * 3;
+  unsigned ey = sy + 3;
+  unsigned sx = topX * 3;
+  unsigned ex = sx + 3;
+
+  for (unsigned y = sy; y < ey; y++) {
+    for (unsigned x = sx; x < ex; x++) {
+      unsigned char p = x + y * 9;
+      if (cells[p] == CellState::EMPTY) {
+        out[index++] = p;
+      }
+    }
+  }
+}
 
 void State::flipState(void) {
   mySymbol = mySymbol == 1 ? 2 : 1;

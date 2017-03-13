@@ -3,7 +3,5 @@ include_rules
 : src/*.o \
 src/fastbot/fastbot.a \
 src/fastbot/mcts/mcts_fast.a \
-src/naivebot/naivebot.a \
-src/naivebot/mcts/mcts_naive.a \
 src/util/util.a \
 |> $(CC) %f -o %o $(CLFLAGS) |> uttt
