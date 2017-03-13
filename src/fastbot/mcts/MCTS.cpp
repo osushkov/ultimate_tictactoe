@@ -27,7 +27,6 @@ struct MCTS::MCTSImpl {
     Timer timer;
     timer.Start();
 
-    totalIters = 0;
     const unsigned timeoutMicroseconds = (timeoutMilliseconds * 1000);
     while (timer.GetElapsedMicroseconds() < timeoutMicroseconds) {
       for (unsigned i = 0; i < MCTS_ITER_CHUNK; i++) {
@@ -36,7 +35,7 @@ struct MCTS::MCTSImpl {
       }
     }
 
-    cout << "fast iters: " << totalIters << " " << timeoutMilliseconds << endl;
+    // cout << "fast iters: " << totalIters << " " << timeoutMilliseconds << endl;
     timer.Stop();
 
     vector<ActionUtility> result = root->GetActionUtilities();

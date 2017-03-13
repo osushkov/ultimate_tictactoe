@@ -26,12 +26,12 @@ struct FastBot::FastBotImpl {
 
   Action ChooseAction(const State &state) {
     unsigned msPerMove = millisecondsPerMove;
-    if (millisecondsPerMove < millisecondsRemaining) {
-      msPerMove += (millisecondsRemaining - millisecondsPerMove) / REMAINING_MS_USE_RATIO;
-    }
-
-    msPerMove = max(msPerMove, MIN_MS_PER_MOVE);
-    msPerMove = min(msPerMove, MAX_MS_PER_MOVE);
+    // if (millisecondsPerMove < millisecondsRemaining) {
+    //   msPerMove += (millisecondsRemaining - millisecondsPerMove) / REMAINING_MS_USE_RATIO;
+    // }
+    //
+    // msPerMove = max(msPerMove, MIN_MS_PER_MOVE);
+    // msPerMove = min(msPerMove, MAX_MS_PER_MOVE);
 
     mcts::MCTS mcts(msPerMove, spec);
     vector<mcts::ActionUtility> actions = mcts.ComputeUtilities(state);

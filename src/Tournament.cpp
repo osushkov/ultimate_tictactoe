@@ -5,7 +5,7 @@
 #include <mutex>
 #include <thread>
 
-static constexpr unsigned NUM_THREADS = 1;
+static constexpr unsigned NUM_THREADS = 20;
 
 struct Tournament::TournamentImpl {
   TournamentImpl() = default;
@@ -31,9 +31,7 @@ struct Tournament::TournamentImpl {
           auto bot2 = botBuilders[p2]();
           bot2->SetBotId(2);
 
-          cout << "asbout to start playout" << endl;
           int pr = playoutFast(bot1.get(), bot2.get());
-          cout << "result: " << pr << endl;
 
           std::unique_lock<std::mutex> lock(mtx);
           played[p1]++;
