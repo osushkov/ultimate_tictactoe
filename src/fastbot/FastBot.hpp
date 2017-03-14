@@ -11,15 +11,16 @@ namespace fastbot {
 
 class FastBot : public Bot {
 public:
-  FastBot(unsigned millisecondsPerMove, const Spec &spec);
+  FastBot(const Spec &spec);
   ~FastBot();
 
   void SetBotId(unsigned char botId) override;
   unsigned char GetBotId(void) const override;
 
-  void SetTimeRemaining(unsigned milliseconds) override;
+  void SetTimePerMove(unsigned milliseconds) override;
+  void SetTimeBank(unsigned milliseconds) override;
 
-  pair<int, int> ChooseAction(const string &field) override;
+  pair<int, int> ChooseAction(const string &field, signed char topCellRestriction) override;
   Action ChooseAction(const State &state);
 
 private:

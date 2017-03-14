@@ -151,27 +151,29 @@ static unsigned countNumMovesMade(const State &state) {
 bool openingmoves::HaveActionFor(const State &state) { return countNumMovesMade(state) <= 3; }
 
 Action openingmoves::GetActionFor(const State &state) {
-  unsigned numMovesMade = countNumMovesMade(state);
+  CellState opponentSymbol = (state.GetMySymbol() == static_cast<unsigned char>(CellState::NAUGHT))
+                                 ? CellState::CROSS
+                                 : CellState::NAUGHT;
 
-  switch (numMovesMade) {
+  switch (countNumMovesMade(state)) {
   case 0:
     return Action(40);
   case 1:
-    return state.GetCellState(40) == CellState::EMPTY ? Action(40) : Action(10);
+    for (auto &m : moves1) {
+      if (state.GetCellState(m.first) == opponentSymbol) {
+        return Action(m.second);
+      }
+    }
+    break;
   case 2:
     assert(static_cast<unsigned char>(state.GetCellState(40)) == state.GetMySymbol());
     for (const auto &m : moves2) {
-      if (state.GetCellState(m.first) != CellState::EMPTY) {
+      if (state.GetCellState(m.first) == opponentSymbol) {
         return Action(m.second);
       }
     }
     break;
   case 3:
-    assert(static_cast<unsigned char>(state.GetCellState(40)) == state.GetMySymbol() ||
-           static_cast<unsigned char>(state.GetCellState(10)) == state.GetMySymbol());
-    CellState opponentSymbol =
-        (state.GetMySymbol() == static_cast<unsigned char>(CellState::NAUGHT)) ? CellState::CROSS
-                                                                               : CellState::NAUGHT;
     for (const auto &m : moves3) {
       if (state.GetCellState(m.first.first) == opponentSymbol &&
           state.GetCellState(m.first.second) == opponentSymbol &&

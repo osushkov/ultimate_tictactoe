@@ -10,7 +10,8 @@ public:
   virtual void SetBotId(unsigned char botId) = 0;
   virtual unsigned char GetBotId(void) const = 0;
 
-  virtual void SetTimeRemaining(unsigned milliseconds) = 0;
+  virtual void SetTimePerMove(unsigned milliseconds) = 0;
+  virtual void SetTimeBank(unsigned milliseconds) = 0;
 
-  virtual pair<int, int> ChooseAction(const string &field) = 0;
+  virtual pair<int, int> ChooseAction(const string &field, signed char topCellRestriction) = 0;
 };

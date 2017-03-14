@@ -41,7 +41,7 @@ void BotIO::Loop() {
 }
 
 std::pair<int, int> BotIO::action(const std::string &type, int time) {
-  return bot->ChooseAction(field);
+  return bot->ChooseAction(field, -1);
 }
 
 void BotIO::processCommand(const std::vector<std::string> &command) {
@@ -78,10 +78,13 @@ void BotIO::setting(const std::string &type, const std::string &value) {
   if (type == "timebank") {
     _timebank = stringToInt(value);
     if (_timebank >= 0) {
-      bot->SetTimeRemaining(static_cast<unsigned>(_timebank));
+      bot->SetTimeBank(static_cast<unsigned>(_timebank));
     }
   } else if (type == "time_per_move") {
     _timePerMove = stringToInt(value);
+    if (_timePerMove >= 0) {
+      bot->SetTimePerMove(static_cast<unsigned>(_timePerMove));
+    }
   } else if (type == "player_names") {
     split(value, ',', _playerNames);
   } else if (type == "your_bot") {

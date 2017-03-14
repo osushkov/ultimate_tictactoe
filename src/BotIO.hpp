@@ -1,11 +1,11 @@
 #pragma once
 
-#include <vector>
 #include <string>
 #include <utility>
+#include <vector>
 
-#include "util/Common.hpp"
 #include "Bot.hpp"
+#include "util/Common.hpp"
 
 class BotIO {
 public:

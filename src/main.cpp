@@ -39,7 +39,11 @@ static pair<fastbot::Spec, float> runFastTournament(const fastbot::Spec &seedSpe
 
   vector<function<uptr<fastbot::FastBot>()>> bots;
   for (const auto &spec : botSpecs) {
-    bots.push_back([&spec]() { return make_unique<fastbot::FastBot>(MS_PER_MOVE, spec); });
+    bots.push_back([&spec]() {
+      auto result = make_unique<fastbot::FastBot>(spec);
+      result->SetTimePerMove(MS_PER_MOVE);
+      return result;
+    });
   }
 
   Tournament tournament;
@@ -66,7 +70,11 @@ static fastbot::Spec betterSpec(const fastbot::Spec &specA, const fastbot::Spec 
 
   vector<function<uptr<fastbot::FastBot>()>> bots;
   for (const auto &spec : botSpecs) {
-    bots.push_back([&spec]() { return make_unique<fastbot::FastBot>(MS_PER_MOVE, spec); });
+    bots.push_back([&spec]() {
+      auto result = make_unique<fastbot::FastBot>(spec);
+      result->SetTimePerMove(MS_PER_MOVE);
+      return result;
+    });
   }
 
   Tournament tournament;
@@ -101,8 +109,9 @@ static void calculateOpeningMoves(void) {
   for (unsigned ti = 0; ti < NUM_THREADS; ti++) {
     thread t([ti, &firstMove, &bestMove, &mtx] {
       const unsigned msPerMove = 1000 * 30;
-      uptr<fastbot::FastBot> bot = make_unique<fastbot::FastBot>(
-          msPerMove, fastbot::Spec(0.546502f, 0.377958f, 0.14554f, 0.178079f));
+      uptr<fastbot::FastBot> bot =
+          make_unique<fastbot::FastBot>(fastbot::Spec(0.546502f, 0.377958f, 0.14554f, 0.178079f));
+      bot->SetTimePerMove(msPerMove);
       bot->SetBotId(2);
 
       unsigned si = (ti * firstMove.size()) / NUM_THREADS;
