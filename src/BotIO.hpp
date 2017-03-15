@@ -18,15 +18,16 @@ private:
   uptr<Bot> bot;
 
   // static settings
-  int _timebank;
-  int _timePerMove;
-  std::vector<std::string> _playerNames;
-  std::string _myName;
+  int timebank;
+  int timePerMove;
+  std::vector<std::string> playerNames;
+  std::string myName;
 
   // dynamic settings
-  int _round;
-  int _move;
+  int round;
+  int move;
   std::string field;
+  std::string macroboard;
 
   std::string line;
   std::vector<std::string> command;

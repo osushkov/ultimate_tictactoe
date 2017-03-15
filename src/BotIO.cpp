@@ -41,7 +41,24 @@ void BotIO::Loop() {
 }
 
 std::pair<int, int> BotIO::action(const std::string &type, int time) {
-  return bot->ChooseAction(field, -1);
+  std::vector<std::string> macroVals;
+  macroVals = split(macroboard, ',', macroVals);
+
+  signed char topCellRestriction = -1;
+  bool haveSeenMinusOne = false;
+
+  for (unsigned ci = 0; ci < macroVals.size(); ci++) {
+    int iv = stringToInt(macroVals[ci]);
+    if (haveSeenMinusOne && iv == -1) {
+      topCellRestriction = -1;
+    } else if (iv == -1) {
+      haveSeenMinusOne = true;
+      topCellRestriction = static_cast<signed char>(ci);
+    }
+  }
+
+  bot->SetTimeBank(static_cast<unsigned>(time));
+  return bot->ChooseAction(field, topCellRestriction);
 }
 
 void BotIO::processCommand(const std::vector<std::string> &command) {
@@ -58,17 +75,19 @@ void BotIO::processCommand(const std::vector<std::string> &command) {
 }
 
 void BotIO::update(const std::string &player, const std::string &type, const std::string &value) {
-  if (player != "game" && player != _myName) {
+  if (player != "game" && player != myName) {
     // It's not my update!
     return;
   }
 
   if (type == "round") {
-    _round = stringToInt(value);
+    round = stringToInt(value);
   } else if (type == "move") {
-    _move = stringToInt(value);
+    move = stringToInt(value);
   } else if (type == "field") {
     field = value;
+  } else if (type == "macroboard") {
+    macroboard = value;
   } else {
     debug("Unknown update <" + type + ">.");
   }
@@ -76,19 +95,19 @@ void BotIO::update(const std::string &player, const std::string &type, const std
 
 void BotIO::setting(const std::string &type, const std::string &value) {
   if (type == "timebank") {
-    _timebank = stringToInt(value);
-    if (_timebank >= 0) {
-      bot->SetTimeBank(static_cast<unsigned>(_timebank));
+    timebank = stringToInt(value);
+    if (timebank >= 0) {
+      bot->SetTimeBank(static_cast<unsigned>(timebank));
     }
   } else if (type == "time_per_move") {
-    _timePerMove = stringToInt(value);
-    if (_timePerMove >= 0) {
-      bot->SetTimePerMove(static_cast<unsigned>(_timePerMove));
+    timePerMove = stringToInt(value);
+    if (timePerMove >= 0) {
+      bot->SetTimePerMove(static_cast<unsigned>(timePerMove));
     }
   } else if (type == "player_names") {
-    split(value, ',', _playerNames);
+    split(value, ',', playerNames);
   } else if (type == "your_bot") {
-    _myName = value;
+    myName = value;
   } else if (type == "your_botid") {
     bot->SetBotId(stringToInt(value));
   } else {

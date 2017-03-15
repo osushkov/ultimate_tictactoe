@@ -35,12 +35,12 @@ struct FastBot::FastBotImpl {
     }
 
     unsigned msPerMove = millisecondsPerMove;
-    // if (millisecondsPerMove < millisecondsRemaining) {
-    //   msPerMove += (millisecondsRemaining - millisecondsPerMove) / REMAINING_MS_USE_RATIO;
-    // }
-    //
-    // msPerMove = max(msPerMove, MIN_MS_PER_MOVE);
-    // msPerMove = min(msPerMove, MAX_MS_PER_MOVE);
+    if (millisecondsBank > millisecondsPerMove) {
+      msPerMove += (millisecondsBank - millisecondsPerMove) / REMAINING_MS_USE_RATIO;
+    }
+
+    msPerMove = max(msPerMove, MIN_MS_PER_MOVE);
+    msPerMove = min(msPerMove, MAX_MS_PER_MOVE);
 
     mcts::MCTS mcts(msPerMove, spec);
     vector<mcts::ActionUtility> actions = mcts.ComputeUtilities(state);
@@ -60,8 +60,7 @@ struct FastBot::FastBotImpl {
       fieldCells[i] = v == 0 ? CellState::EMPTY : static_cast<CellState>(v);
     }
 
-    // TODO: fixme.
-    return State(fieldCells, botId, -1);
+    return State(fieldCells, topCellRestriction, botId);
   }
 
   std::vector<std::string> &split(const std::string &s, char delim,
