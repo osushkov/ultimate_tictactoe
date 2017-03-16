@@ -39,7 +39,7 @@ public:
   ~State() = default;
 
   State &operator=(const State &other);
-  bool operator==(const State &other) const = delete;
+  bool operator==(const State &other) const;
 
   // Print this state to the output stream.
   void Output(std::ostream &out) const;

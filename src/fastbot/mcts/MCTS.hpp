@@ -15,11 +15,11 @@ using ActionUtility = pair<Action, float>;
 // Monte-Carlo Tree Search.
 class MCTS {
 public:
-  MCTS(unsigned timeoutMilliseconds, const Spec &spec);
+  MCTS(const Spec &spec);
   virtual ~MCTS();
 
   // Sorted list of action utilities.
-  vector<ActionUtility> ComputeUtilities(const State &curState);
+  vector<ActionUtility> ComputeUtilities(const State &curState, unsigned timeoutMilliseconds);
 
 private:
   struct MCTSImpl;

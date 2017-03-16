@@ -11,7 +11,7 @@
 
 using namespace std;
 
-static constexpr unsigned MS_PER_MOVE = 150;
+static constexpr unsigned MS_PER_MOVE = 200;
 
 static fastbot::Spec randomSpec(void) {
   float minExplorationWeightA = 0.0f, maxExplorationWeightA = 2.0f;
@@ -156,24 +156,24 @@ int main() {
   srand(time(NULL));
   // srand(1337);
 
-  calculateOpeningMoves();
+  // calculateOpeningMoves();
 
-  // fastbot::Spec bestSpec = initialSpec();
-  //
-  // for (unsigned i = 0; i < 100; i++) {
-  //   auto r = runFastTournament(bestSpec, 4, 500);
-  //   cout << "i: " << i << " " << r.second << endl;
-  //
-  //   if (r.first != bestSpec) {
-  //     bestSpec = betterSpec(bestSpec, r.first, 200);
-  //
-  //     cout << "best: " << r.second << endl;
-  //     cout << bestSpec.explorationWeightA << endl;
-  //     cout << bestSpec.explorationWeightC << endl;
-  //     cout << bestSpec.randomWeight << endl;
-  //     cout << bestSpec.pRandomSelect << endl << endl;
-  //   }
-  // }
+  fastbot::Spec bestSpec = initialSpec();
+
+  for (unsigned i = 0; i < 100; i++) {
+    auto r = runFastTournament(bestSpec, 4, 500);
+    cout << "i: " << i << " " << r.second << endl;
+
+    if (r.first != bestSpec) {
+      bestSpec = betterSpec(bestSpec, r.first, 200);
+
+      cout << "best: " << r.second << endl;
+      cout << bestSpec.explorationWeightA << endl;
+      cout << bestSpec.explorationWeightC << endl;
+      cout << bestSpec.randomWeight << endl;
+      cout << bestSpec.pRandomSelect << endl << endl;
+    }
+  }
 
   //
   // BotIO botIO(std::move(bot));

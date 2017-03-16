@@ -11,18 +11,17 @@ using namespace fastbot::mcts;
 static unsigned totalIters = 0;
 
 struct MCTS::MCTSImpl {
-  unsigned timeoutMilliseconds;
   Spec spec;
-
   uptr<Node> root;
 
-  MCTSImpl(unsigned timeoutMilliseconds, const Spec &spec)
-      : timeoutMilliseconds(timeoutMilliseconds), spec(spec){};
+  MCTSImpl(const Spec &spec) : spec(spec), root(nullptr){};
 
   // TODO: handle the fact that the lifetime of an action returned here has to be less than or
   // equal to the lifetime of the MCTS.
-  vector<ActionUtility> ComputeUtilities(const State &startState) {
-    root = make_unique<Node>(startState, 0, 0);
+  vector<ActionUtility> ComputeUtilities(const State &startState, unsigned timeoutMilliseconds) {
+    if (!tryReuseSubtree(startState)) {
+      root = make_unique<Node>(startState, 0, 0);
+    }
 
     Timer timer;
     timer.Start();
@@ -43,6 +42,29 @@ struct MCTS::MCTSImpl {
          [](const ActionUtility &a0, const ActionUtility &a1) { return a0.second > a1.second; });
 
     return result;
+  }
+
+  bool tryReuseSubtree(const State &startState) {
+    // return false;
+    if (!root) {
+      return false;
+    }
+
+    if (root->GetState() == startState) {
+      return true;
+    }
+
+    for (auto &edge : root->GetChildren()) {
+      for (auto &edge2 : edge.second->GetChildren()) {
+        if (edge2.second->GetState() == startState) {
+          uptr<Node> newRoot = move(edge2.second);
+          root = move(newRoot);
+          return true;
+        }
+      }
+    }
+
+    return false;
   }
 
   // single iteration of monte-carlo tree search.
@@ -98,11 +120,10 @@ struct MCTS::MCTSImpl {
   }
 };
 
-MCTS::MCTS(unsigned timeoutMilliseconds, const Spec &spec)
-    : impl(new MCTSImpl(timeoutMilliseconds, spec)) {}
+MCTS::MCTS(const Spec &spec) : impl(new MCTSImpl(spec)) {}
 
 MCTS::~MCTS() = default;
 
-vector<ActionUtility> MCTS::ComputeUtilities(const State &curState) {
-  return impl->ComputeUtilities(curState);
+vector<ActionUtility> MCTS::ComputeUtilities(const State &curState, unsigned timeoutMilliseconds) {
+  return impl->ComputeUtilities(curState, timeoutMilliseconds);
 }

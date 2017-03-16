@@ -10,16 +10,18 @@ using namespace fastbot;
 static constexpr unsigned DEFAULT_MS_PER_MOVE = 500;
 static constexpr unsigned MIN_MS_PER_MOVE = 10;
 static constexpr unsigned MAX_MS_PER_MOVE = 1000;
+static constexpr unsigned SAFETY_MS = 20;
 static constexpr unsigned REMAINING_MS_USE_RATIO = 20;
 
 struct FastBot::FastBotImpl {
+  mcts::MCTS mcts;
+
   unsigned char botId;
   unsigned millisecondsPerMove;
   unsigned millisecondsBank;
-  Spec spec;
 
   FastBotImpl(const Spec &spec)
-      : botId(1), millisecondsPerMove(DEFAULT_MS_PER_MOVE), millisecondsBank(0), spec(spec){};
+      : mcts(spec), botId(1), millisecondsPerMove(DEFAULT_MS_PER_MOVE), millisecondsBank(0){};
 
   pair<int, int> ChooseAction(const string &field, signed char topCellRestriction) {
     auto action = ChooseAction(parseState(field, topCellRestriction));
@@ -41,9 +43,9 @@ struct FastBot::FastBotImpl {
 
     msPerMove = max(msPerMove, MIN_MS_PER_MOVE);
     msPerMove = min(msPerMove, MAX_MS_PER_MOVE);
+    msPerMove -= SAFETY_MS;
 
-    mcts::MCTS mcts(msPerMove, spec);
-    vector<mcts::ActionUtility> actions = mcts.ComputeUtilities(state);
+    vector<mcts::ActionUtility> actions = mcts.ComputeUtilities(state, msPerMove);
     return actions.front().first;
   }
 

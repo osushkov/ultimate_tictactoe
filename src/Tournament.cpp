@@ -5,7 +5,7 @@
 #include <mutex>
 #include <thread>
 
-static constexpr unsigned NUM_THREADS = 20;
+static constexpr unsigned NUM_THREADS = 10;
 
 struct Tournament::TournamentImpl {
   TournamentImpl() = default;

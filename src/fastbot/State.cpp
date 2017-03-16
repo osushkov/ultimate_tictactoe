@@ -176,21 +176,21 @@ State &State::operator=(const State &other) {
   return *this;
 }
 
-// bool State::operator==(const State &other) const {
-//   assert(cells.size() == other.cells.size());
-//
-//   if (mySymbol != other.mySymbol || topCellRestriction != other.topCellRestriction) {
-//     return false;
-//   }
-//
-//   for (unsigned i = 0; i < cells.size(); i++) {
-//     if (cells[i] != other.cells[i]) {
-//       return false;
-//     }
-//   }
-//
-//   return true;
-// }
+bool State::operator==(const State &other) const {
+  assert(cells.size() == other.cells.size());
+
+  if (mySymbol != other.mySymbol || topCellRestriction != other.topCellRestriction) {
+    return false;
+  }
+
+  for (unsigned i = 0; i < cells.size(); i++) {
+    if (cells[i] != other.cells[i]) {
+      return false;
+    }
+  }
+
+  return true;
+}
 
 void State::Output(std::ostream &out) const {
   out << "top level:" << endl;

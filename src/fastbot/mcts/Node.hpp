@@ -35,7 +35,9 @@ public:
   // From this node, what is the probability the given player will win.
   float ExpectedUtility(unsigned char playerIndex) const;
 
-private:
+  vector<Edge> &GetChildren(void) { return children; }
+
+  // private:
   State state;
   vector<Edge> children;
   vector<Action> nonExpandedActions;

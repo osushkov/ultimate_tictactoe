@@ -16,14 +16,12 @@ struct Spec {
         randomWeight(randomWeight), pRandomSelect(pRandomSelect) {}
 
   bool operator==(const Spec &other) {
-     return fabsf(explorationWeightA - other.explorationWeightA) < 0.0001f &&
-        fabsf(explorationWeightC - other.explorationWeightC) < 0.0001f &&
-        fabsf(randomWeight - other.randomWeight) < 0.0001f &&
-        fabsf(pRandomSelect - other.pRandomSelect) < 0.0001f;
+    return fabsf(explorationWeightA - other.explorationWeightA) < 0.0001f &&
+           fabsf(explorationWeightC - other.explorationWeightC) < 0.0001f &&
+           fabsf(randomWeight - other.randomWeight) < 0.0001f &&
+           fabsf(pRandomSelect - other.pRandomSelect) < 0.0001f;
   }
 
-  bool operator!=(const Spec &other) {
-    return !(*this == other);
-  }
+  bool operator!=(const Spec &other) { return !(*this == other); }
 };
 }
